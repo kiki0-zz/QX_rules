@@ -9,7 +9,7 @@ DOMAIN-SUFFIX,ad.qidian.com,DIRECT
 DOMAIN-SUFFIX,qidian.gtimg.com,DIRECT
 DOMAIN-SUFFIX,ue.qidian.com,DIRECT
 DOMAIN-SUFFIX,h5.if.qidian.com,DIRECT
-DOMAIN-SUFFIX,magev6.if.qidian.com,DIRECT
+DOMAIN-SUFFIX,mage*.if.qidian.com,DIRECT
 DOMAIN-SUFFIX,activity.if.qidian.com,DIRECT
 DOMAIN-SUFFIX,reward.if.qidian.com,DIRECT
 DOMAIN-SUFFIX,promo.if.qidian.com,DIRECT
