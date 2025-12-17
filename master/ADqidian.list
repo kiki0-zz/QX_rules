@@ -1,0 +1,6 @@
+# === 起点读书 · 福利广告必须直连 ===
+DOMAIN-SUFFIX,cococdn.qidian.com,DIRECT
+DOMAIN-SUFFIX,ad.qidian.com,DIRECT
+DOMAIN-SUFFIX,qidian.gtimg.com,DIRECT
+DOMAIN-SUFFIX,ue.qidian.com,DIRECT
+DOMAIN-SUFFIX,analytics.qidian.com,DIRECT
