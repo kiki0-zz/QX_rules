@@ -1,0 +1,6 @@
+# > Pornhub (含视频流 CDN)
+HOST-SUFFIX, pornhub.com, movie
+HOST-SUFFIX, phncdn.com, movie
+HOST-SUFFIX, phprcdn.com, movie
+HOST-SUFFIX, pornhubpremium.com, movie
+HOST-KEYWORD, pornhub, movie
