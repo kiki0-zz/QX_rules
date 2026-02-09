@@ -1,0 +1,16 @@
+# > 起点读书 (包含阅文集团相关域名)
+HOST-SUFFIX, qidian.com, qidian
+HOST-SUFFIX, qdmm.com, qidian
+HOST-SUFFIX, qdstatic.com, qidian
+HOST-SUFFIX, yuewen.com, qidian
+HOST-SUFFIX, readnovel.com, qidian
+HOST-SUFFIX, hongxiu.com, qidian
+HOST-SUFFIX, xs8.cn, qidian
+HOST-SUFFIX, webnovel.com, qidian
+
+# > 广告及数据上报 (针对起点 App 内的嵌入广告)
+HOST-SUFFIX, adstats.tencent.com, qidian
+HOST-SUFFIX, e.qq.com, qidian
+HOST-SUFFIX, gdt.qq.com, qidian
+HOST-SUFFIX, bugly.qq.com, qidian
+HOST-KEYWORD, qidian, qidian
