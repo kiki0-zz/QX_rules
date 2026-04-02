@@ -1,0 +1,16 @@
+# --- Claude (Anthropic) 核心分流 ---
+
+# 网页端与 API 主域名
+DOMAIN-SUFFIX, claude.ai
+DOMAIN-SUFFIX, anthropic.com
+
+# 静态资源、图片及文件上传
+DOMAIN-SUFFIX, claudeusercontent.com
+
+# 2026 新增：Claude Code (Web & CLI) 相关
+DOMAIN-SUFFIX, anthropic.sh
+DOMAIN, code.claude.com
+
+# 统计与性能监控 (可选，若无法登录建议加上)
+DOMAIN-KEYWORD, anthropic-static
+DOMAIN, statsig.anthropic.com
