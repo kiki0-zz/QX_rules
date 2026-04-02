@@ -1,0 +1,34 @@
+# --- TikTok 核心分流 ---
+
+# > User-Agent 匹配
+USER-AGENT, TikTok*
+
+# > 核心域名及短链接
+DOMAIN-SUFFIX, tiktok.com
+DOMAIN-SUFFIX, tiktokv.com
+DOMAIN-SUFFIX, tik-tokapi.com
+DOMAIN-SUFFIX, t.tiktok.com
+DOMAIN-SUFFIX, vt.tiktok.com
+
+# > 视频流 CDN 与静态资源
+DOMAIN-SUFFIX, tiktokcdn.com
+DOMAIN-SUFFIX, tiktokcdn-us.com
+DOMAIN-SUFFIX, tiktokd.org
+DOMAIN-SUFFIX, tiktokd.t.akamai.net
+DOMAIN-SUFFIX, tiktokv.com.c.footprint.net
+DOMAIN-KEYWORD, tiktokcdn
+
+# > 字节跳动海外节点域名 (ByteDance Oversea)
+DOMAIN-SUFFIX, byteoversea.com
+DOMAIN-SUFFIX, ibytedtos.com
+DOMAIN-SUFFIX, ibyteimg.com
+DOMAIN-SUFFIX, ipstatp.com
+DOMAIN-SUFFIX, sgpstatp.com
+DOMAIN-SUFFIX, snssdk.com
+
+# > Musical.ly (历史遗留域名，仍在使用)
+DOMAIN-SUFFIX, muscdn.com
+DOMAIN-SUFFIX, musical.ly
+
+# > 兜底关键词
+DOMAIN-KEYWORD, tiktok
