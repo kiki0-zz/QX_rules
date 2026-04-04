@@ -1,0 +1,16 @@
+#!name=鲨鱼记账去开屏
+#!desc=精准拦截鲨鱼记账的第三方联盟广告，避开与起点的规则冲突。
+#!author=Zhao Kai专属定制
+
+[Rule]
+# 拦截字节跳动穿山甲广告 SDK (鲨鱼记账重度依赖)
+DOMAIN-KEYWORD, pangolin, REJECT
+DOMAIN-SUFFIX, pglstatp.com, REJECT
+DOMAIN-SUFFIX, pggy.com, REJECT
+
+# 拦截百度联盟广告
+DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
+DOMAIN-SUFFIX, pos.baidu.com, REJECT
+
+# 拦截其他常见开屏分发平台
+DOMAIN-SUFFIX, adnet.qq.com, REJECT
