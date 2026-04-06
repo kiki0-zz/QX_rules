@@ -1,0 +1,21 @@
+#!name=盒马纯净版 (安全去广告)
+#!desc=拦截盒马基础广告与追踪统计，完全放行主页核心数据，彻底告别白屏误杀。
+#!author=Zhao Kai专属定制
+
+[Rule]
+# 拦截阿里及盒马系常见的数据追踪、日志上报与部分开屏调度
+DOMAIN, adashx.m.taobao.com, REJECT
+DOMAIN, adashbc.ut.taobao.com, REJECT
+DOMAIN, audid-api.taobao.com, REJECT
+DOMAIN, apm.freshippo.com, REJECT
+DOMAIN, wmlog.taobao.com, REJECT
+DOMAIN, amdc.m.taobao.com, REJECT
+
+# 拦截第三方广告统计与追踪 SDK (友盟等)
+DOMAIN-SUFFIX, umeng.com, REJECT
+DOMAIN-SUFFIX, umengcloud.com, REJECT
+DOMAIN-SUFFIX, jpush.cn, REJECT
+DOMAIN-SUFFIX, crashlytics.com, REJECT
+
+# 拦截常见的公共广告联盟分发 (防开屏漏网)
+DOMAIN-KEYWORD, adash, REJECT
