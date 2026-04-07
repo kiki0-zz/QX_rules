@@ -31,7 +31,7 @@ AND, ((IP-ASN, 63646, no-resolve), (DEST-PORT, 25641), (PROTOCOL, TCP)), REJECT
 ^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-dict
 
 # [修复2] 注释掉了动态配置拦截，这玩意儿经常负责下发实时的行程弹窗，容易导致主页状态不同步
-# ^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
+ ^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
 
 # [修复3] 放宽了主页实例的匹配规则，加入 order|trip|progress，确保进行中的行程卡片不被删除
 ^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq '.data |= (.instances |= (to_entries | map(select(.key | test("feed_back_|dache_main_member|order|trip|progress|dache_main_core_icon|dache_main_card_"))) | from_entries))'
