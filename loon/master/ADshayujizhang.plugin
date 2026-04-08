@@ -1,6 +1,6 @@
-#!name=鲨鱼记账去开屏
-#!desc=精准拦截鲨鱼记账的第三方联盟广告，避开与起点的规则冲突。
-#!author=kiki专属定制
+#!name=鲨鱼记账去开屏 (秒开提速版)
+#!desc=精准拦截联盟广告，并利用假数据重写彻底解决启动卡顿等待 3 秒的问题。
+#!author=kiki
 
 [Rule]
 # 拦截字节跳动穿山甲广告 SDK (鲨鱼记账重度依赖)
@@ -14,3 +14,11 @@ DOMAIN-SUFFIX, pos.baidu.com, REJECT
 
 # 拦截其他常见开屏分发平台
 DOMAIN-SUFFIX, adnet.qq.com, REJECT
+
+[Rewrite]
+# 核心魔法：拦截到广点通的广告请求时，瞬间返回一个空的 JSON 数据包骗过 App，免去超时等待
+^https?:\/\/win\.gdt\.qq\.com reject-dict
+
+[MitM]
+# 必须赋予 Loon 解密这个特定广告域名的权限，才能塞假数据
+hostname = win.gdt.qq.com
