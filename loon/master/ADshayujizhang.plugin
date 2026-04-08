@@ -1,24 +1,25 @@
-#!name=鲨鱼记账去开屏
-#!desc=精准拦截联盟广告，并利用假数据重写彻底解决启动卡顿等待 3 秒的问题。
-#!author=kiki专属
+#!name=鲨鱼记账去开屏 (全覆盖秒开版)
+#!desc=对腾讯、字节穿山甲、百度联盟全面实行假数据欺骗，彻底消除所有超时卡顿。
+#!author=kiki
 
 [Rule]
-# 拦截字节跳动穿山甲广告 SDK (鲨鱼记账重度依赖)
+# 保底拦截，防止部分未能被重写捕获的边缘请求
 DOMAIN-KEYWORD, pangolin, REJECT
 DOMAIN-SUFFIX, pglstatp.com, REJECT
 DOMAIN-SUFFIX, pggy.com, REJECT
-
-# 拦截百度联盟广告
 DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
 DOMAIN-SUFFIX, pos.baidu.com, REJECT
-
-# 拦截其他常见开屏分发平台
 DOMAIN-SUFFIX, adnet.qq.com, REJECT
 
 [Rewrite]
-# 核心魔法：拦截到广点通的广告请求时，瞬间返回一个空的 JSON 数据包骗过 App，免去超时等待
+# 全面魔法：把所有可能导致卡顿的广告接口，全部秒回空 JSON 骗过去
+^https?:\/\/.*\.pglstatp\.com reject-dict
+^https?:\/\/.*\.pggy\.com reject-dict
+^https?:\/\/cpro\.baidustatic\.com reject-dict
+^https?:\/\/pos\.baidu\.com reject-dict
+^https?:\/\/adnet\.qq\.com reject-dict
 ^https?:\/\/win\.gdt\.qq\.com reject-dict
 
 [MitM]
-# 必须赋予 Loon 解密这个特定广告域名的权限，才能塞假数据
-hostname = win.gdt.qq.com
+# 必须赋予 Loon 全面的解密权限，才能批量塞入假数据
+hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, adnet.qq.com, win.gdt.qq.com
