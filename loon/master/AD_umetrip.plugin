@@ -1,19 +1,20 @@
-#!name=航旅纵横Pro去广告
-#!desc=精准拦截航旅纵横Pro开屏广告及应用内推广，不影响行程数据。
+#!name=航旅纵横Pro去广告 (kiki安全版)
+#!desc=只拦截开屏广告专用域名，绝不误杀登录与航班行程核心接口。
 #!author=kiki
 #!tag=去广告
 
 [Rule]
-# 拦截第三方广告联盟及追踪（航旅纵横常接入的数据收集平台）
+# 拦截第三方广告联盟及追踪
 DOMAIN, ad.umetrip.com, REJECT
 DOMAIN-KEYWORD, umetrip-ad, REJECT
 
+# 拦截真正的开屏广告专用域名（防止直接阻断导致白屏卡顿，这里用 REJECT-DROP 或者交给下面的重写处理）
+DOMAIN, startup.umetrip.com, REJECT
+DOMAIN, discardrp.umetrip.com, REJECT
+
 [Rewrite]
-# 核心拦截：直接掐断航旅纵横的自家开屏广告及活动弹窗下发接口
-# 使用 reject-dict 安全拒绝，防止 App 报错闪退
-^https?:\/\/umerp\.umetrip\.com\/gateway\/api\/umetrip\/native reject-dict
-^https?:\/\/home\.umetrip\.com\/gateway\/api\/umetrip\/native reject-dict
+# 核心修正：只拒绝专门负责启动页广告的子域名请求，绝对放行主干道 (umerp 和 home)
+^https?:\/\/(discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native reject-dict
 
 [MitM]
-# 赋予 Loon 解密这两个广告网关的权限
-hostname = umerp.umetrip.com, home.umetrip.com
+hostname = startup.umetrip.com, discardrp.umetrip.com
