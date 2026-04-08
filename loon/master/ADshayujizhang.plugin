@@ -1,25 +1,30 @@
 #!name=鲨鱼记账去开屏 (全覆盖秒开版)
-#!desc=对腾讯、字节穿山甲、百度联盟全面实行假数据欺骗，彻底消除所有超时卡顿。
+#!desc=对腾讯、穿山甲、百度及友盟全面实行假数据欺骗，彻底消除超时卡顿。
 #!author=kiki
 
 [Rule]
-# 保底拦截，防止部分未能被重写捕获的边缘请求
+# 保底拦截
 DOMAIN-KEYWORD, pangolin, REJECT
 DOMAIN-SUFFIX, pglstatp.com, REJECT
 DOMAIN-SUFFIX, pggy.com, REJECT
 DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
 DOMAIN-SUFFIX, pos.baidu.com, REJECT
 DOMAIN-SUFFIX, adnet.qq.com, REJECT
+DOMAIN, bgg.baidu.com, REJECT
 
 [Rewrite]
-# 全面魔法：把所有可能导致卡顿的广告接口，全部秒回空 JSON 骗过去
+# 全面魔法：把所有会导致卡顿的接口，全部秒回空 JSON 骗过去
 ^https?:\/\/.*\.pglstatp\.com reject-dict
 ^https?:\/\/.*\.pggy\.com reject-dict
 ^https?:\/\/cpro\.baidustatic\.com reject-dict
 ^https?:\/\/pos\.baidu\.com reject-dict
 ^https?:\/\/adnet\.qq\.com reject-dict
 ^https?:\/\/win\.gdt\.qq\.com reject-dict
+# 新增抓包发现的卡顿元凶：
+^https?:\/\/bgg\.baidu\.com reject-dict
+^https?:\/\/.*pangolin-sdk-toutiao.*\.com reject-dict
+^https?:\/\/.*\.umeng\.com reject-dict
 
 [MitM]
-# 必须赋予 Loon 全面的解密权限，才能批量塞入假数据
-hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, adnet.qq.com, win.gdt.qq.com
+# 必须赋予解密权限，Loon才能成功塞入假数据！
+hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, adnet.qq.com, win.gdt.qq.com, bgg.baidu.com, *pangolin-sdk-toutiao*.com, *.umeng.com
