@@ -1,30 +1,34 @@
-#!name=鲨鱼记账去开屏 (v3版)
-#!desc=对腾讯、穿山甲、百度及友盟全面实行假数据欺骗，彻底消除超时卡顿。
+#!name=鲨鱼记账去开屏 (终极秒开版)
+#!desc=对腾讯、穿山甲、百度及友盟全面实行假数据欺骗，覆盖最新抓包发现的所有备胎域名。
 #!author=kiki
 
 [Rule]
-# 保底拦截
+# 保底拦截，防止部分未能被重写捕获的边缘请求
 DOMAIN-KEYWORD, pangolin, REJECT
 DOMAIN-SUFFIX, pglstatp.com, REJECT
 DOMAIN-SUFFIX, pggy.com, REJECT
 DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
 DOMAIN-SUFFIX, pos.baidu.com, REJECT
 DOMAIN-SUFFIX, adnet.qq.com, REJECT
-DOMAIN, bgg.baidu.com, REJECT
+DOMAIN-SUFFIX, umeng.com, REJECT
 
 [Rewrite]
-# 全面魔法：把所有会导致卡顿的接口，全部秒回空 JSON 骗过去
+# 百度系新变种 (包含 bgg, mobads 等)
+^https?:\/\/(bgg|mobads|mobads-logs|pos)\.baidu\.com reject-dict
+^https?:\/\/cpro\.baidustatic\.com reject-dict
+
+# 腾讯广点通新变种 (包含 v2mi)
+^https?:\/\/(win|v2mi|mi)\.gdt\.qq\.com reject-dict
+^https?:\/\/adnet\.qq\.com reject-dict
+
+# 穿山甲新变种 (包含 toutiao-b)
+^https?:\/\/api-access\.pangolin-sdk-toutiao.*\.com reject-dict
 ^https?:\/\/.*\.pglstatp\.com reject-dict
 ^https?:\/\/.*\.pggy\.com reject-dict
-^https?:\/\/cpro\.baidustatic\.com reject-dict
-^https?:\/\/pos\.baidu\.com reject-dict
-^https?:\/\/adnet\.qq\.com reject-dict
-^https?:\/\/win\.gdt\.qq\.com reject-dict
-# 新增抓包发现的卡顿元凶：
-^https?:\/\/bgg\.baidu\.com reject-dict
-^https?:\/\/.*pangolin-sdk-toutiao.*\.com reject-dict
+
+# 友盟统计新变种 (包含 errnewlog)
 ^https?:\/\/.*\.umeng\.com reject-dict
 
 [MitM]
-# 必须赋予解密权限，Loon才能成功塞入假数据！
-hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, adnet.qq.com, win.gdt.qq.com, bgg.baidu.com, *pangolin-sdk-toutiao*.com, *.umeng.com
+# 必须赋予精确的解密权限，Loon才能成功塞入假数据！
+hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, bgg.baidu.com, mobads.baidu.com, mobads-logs.baidu.com, adnet.qq.com, win.gdt.qq.com, v2mi.gdt.qq.com, api-access.pangolin-sdk-toutiao*.com, *.umeng.com
