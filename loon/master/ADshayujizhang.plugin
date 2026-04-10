@@ -1,6 +1,6 @@
 #!name=鲨鱼记账去广告
 #!desc=拦截鲨鱼记账已公开接入的常见广告平台请求，尽量避免误伤同步接口。
-#!author=OpenAI
+#!author=kiki
 #!homepage=https://www.shayujizhang.com/
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Budget.png
 #!tag=去广告, 鲨鱼记账, Loon
@@ -58,10 +58,3 @@ DOMAIN,mobads-pre-config.cdn.bcebos.com,REJECT
 DOMAIN-SUFFIX,e.kuaishou.com,REJECT
 DOMAIN-SUFFIX,cm.kwad.com,REJECT
 DOMAIN-SUFFIX,cm.downloader.commercial.kuaishou.com,REJECT
-
-# --- 友盟统计（不影响主流程时可拦） ---
-DOMAIN,sec.umeng.com,REJECT
-DOMAIN,ulogs.umeng.com,REJECT
-DOMAIN,errlog.umeng.com,REJECT
-DOMAIN,msg.umengcloud.com,REJECT
-DOMAIN-KEYWORD,umeng,REJECT
