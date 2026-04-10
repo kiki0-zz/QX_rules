@@ -1,60 +1,38 @@
-#!name=鲨鱼记账去广告
-#!desc=拦截鲨鱼记账常见广告平台请求，使用 REJECT-DROP 降低启动卡顿概率。
+#!name=鲨鱼记账去开屏 (终极秒开版)
+#!desc=修复官方开屏配置接口 (itg/art) 导致的 3 秒启动卡顿，极致丝滑。
 #!author=kiki
-#!homepage=https://www.shayujizhang.com/
-#!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Budget.png
-#!tag=去广告, 鲨鱼记账, Loon
-#!system=iOS, iPadOS
-#!date=2026-04-10
 
 [Rule]
-# --- 鲨鱼记账自身接口：不要拦 ---
-DOMAIN,api.shayujizhang.com,DIRECT
-DOMAIN-SUFFIX,shayujizhang.com,DIRECT
+DOMAIN-KEYWORD, pangolin, REJECT
+DOMAIN-SUFFIX, pglstatp.com, REJECT
+DOMAIN-SUFFIX, pggy.com, REJECT
+DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
+DOMAIN-SUFFIX, pos.baidu.com, REJECT
+DOMAIN-SUFFIX, adnet.qq.com, REJECT
+DOMAIN-SUFFIX, umeng.com, REJECT
 
-# --- 穿山甲 / 巨量引擎 / GroMore ---
-DOMAIN-SUFFIX,ad.oceanengine.com,REJECT-DROP
-DOMAIN-SUFFIX,pangle.io,REJECT-DROP
-DOMAIN-SUFFIX,ad.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,dm.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,dsp.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,nativeapp.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,partner.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,track.toutiao.com,REJECT-DROP
-DOMAIN-SUFFIX,extlog.snssdk.com,REJECT-DROP
-DOMAIN-SUFFIX,sdfp.snssdk.com,REJECT-DROP
-DOMAIN-KEYWORD,pangolin-sdk-toutiao,REJECT-DROP
-DOMAIN-KEYWORD,pangolin.snssdk.com,REJECT-DROP
-DOMAIN-KEYWORD,pglstatp-toutiao,REJECT-DROP
-DOMAIN-KEYWORD,dm.bytedance.com,REJECT-DROP
+[Rewrite]
+# 百度系
+^https?:\/\/(bgg|mobads|mobads-logs|pos)\.baidu\.com reject-dict
+^https?:\/\/cpro\.baidustatic\.com reject-dict
 
-# --- 腾讯优量汇 ---
-DOMAIN-SUFFIX,e.qq.com,REJECT-DROP
-DOMAIN-SUFFIX,gdt.qq.com,REJECT-DROP
-DOMAIN-SUFFIX,v.gdt.qq.com,REJECT-DROP
-DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT-DROP
-DOMAIN-SUFFIX,pgdt.gtimg.com,REJECT-DROP
-DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT-DROP
-DOMAIN,sdk.e.qq.com,REJECT-DROP
-DOMAIN,tangram.e.qq.com,REJECT-DROP
-DOMAIN,p.l.qq.com,REJECT-DROP
-DOMAIN,us.l.qq.com,REJECT-DROP
-DOMAIN,xs.gdt.qq.com,REJECT-DROP
+# 腾讯系
+^https?:\/\/(win|v2mi|mi)\.gdt\.qq\.com reject-dict
+^https?:\/\/adnet\.qq\.com reject-dict
 
-# --- 百度联盟 ---
-DOMAIN-SUFFIX,cpro.baidu.com,REJECT-DROP
-DOMAIN-SUFFIX,pos.baidu.com,REJECT-DROP
-DOMAIN-SUFFIX,mobads.baidu.com,REJECT-DROP
-DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT-DROP
-DOMAIN-SUFFIX,union.baidu.com,REJECT-DROP
-DOMAIN,afd.baidu.com,REJECT-DROP
-DOMAIN,als.baidu.com,REJECT-DROP
-DOMAIN,duclick.baidu.com,REJECT-DROP
-DOMAIN,nadvideo2.baidu.com,REJECT-DROP
-DOMAIN,nsclick.baidu.com,REJECT-DROP
-DOMAIN,mobads-pre-config.cdn.bcebos.com,REJECT-DROP
+# 穿山甲系
+^https?:\/\/api-access\.pangolin-sdk-toutiao.*\.com reject-dict
+^https?:\/\/.*\.pglstatp\.com reject-dict
+^https?:\/\/.*\.pggy\.com reject-dict
 
-# --- 快手联盟 ---
-DOMAIN-SUFFIX,e.kuaishou.com,REJECT-DROP
-DOMAIN-SUFFIX,cm.kwad.com,REJECT-DROP
-DOMAIN-SUFFIX,cm.downloader.commercial.kuaishou.com,REJECT-DROP
+# 友盟统计及火山引擎
+^https?:\/\/.*\.umeng\.com reject-dict
+^https?:\/\/mssdk\.volces\.com reject-dict
+^https?:\/\/.*\.ctobsnssdk\.com reject-dict
+
+# 🎯 终极真凶：鲨鱼记账自家的开屏/海报配置下发接口
+^https?:\/\/itg\.shayujizhang\.com reject-dict
+^https?:\/\/art\.xingxingjizhang\.com reject-dict
+
+[MitM]
+hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, bgg.baidu.com, mobads.baidu.com, mobads-logs.baidu.com, adnet.qq.com, win.gdt.qq.com, v2mi.gdt.qq.com, api-access.pangolin-sdk-toutiao*.com, *.umeng.com, mssdk.volces.com, *.ctobsnssdk.com, itg.shayujizhang.com, art.xingxingjizhang.com
