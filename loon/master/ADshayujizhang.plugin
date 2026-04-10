@@ -1,5 +1,5 @@
 #!name=鲨鱼记账去广告
-#!desc=拦截鲨鱼记账已公开接入的常见广告平台请求，尽量避免误伤同步接口。
+#!desc=拦截鲨鱼记账常见广告平台请求，使用 REJECT-DROP 降低启动卡顿概率。
 #!author=kiki
 #!homepage=https://www.shayujizhang.com/
 #!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Budget.png
@@ -13,48 +13,48 @@ DOMAIN,api.shayujizhang.com,DIRECT
 DOMAIN-SUFFIX,shayujizhang.com,DIRECT
 
 # --- 穿山甲 / 巨量引擎 / GroMore ---
-DOMAIN-SUFFIX,ad.oceanengine.com,REJECT
-DOMAIN-SUFFIX,pangle.io,REJECT
-DOMAIN-SUFFIX,ad.toutiao.com,REJECT
-DOMAIN-SUFFIX,dm.toutiao.com,REJECT
-DOMAIN-SUFFIX,dsp.toutiao.com,REJECT
-DOMAIN-SUFFIX,nativeapp.toutiao.com,REJECT
-DOMAIN-SUFFIX,partner.toutiao.com,REJECT
-DOMAIN-SUFFIX,track.toutiao.com,REJECT
-DOMAIN-SUFFIX,extlog.snssdk.com,REJECT
-DOMAIN-SUFFIX,sdfp.snssdk.com,REJECT
-DOMAIN-KEYWORD,pangolin-sdk-toutiao,REJECT
-DOMAIN-KEYWORD,pangolin.snssdk.com,REJECT
-DOMAIN-KEYWORD,pglstatp-toutiao,REJECT
-DOMAIN-KEYWORD,dm.bytedance.com,REJECT
+DOMAIN-SUFFIX,ad.oceanengine.com,REJECT-DROP
+DOMAIN-SUFFIX,pangle.io,REJECT-DROP
+DOMAIN-SUFFIX,ad.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,dm.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,dsp.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,nativeapp.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,partner.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,track.toutiao.com,REJECT-DROP
+DOMAIN-SUFFIX,extlog.snssdk.com,REJECT-DROP
+DOMAIN-SUFFIX,sdfp.snssdk.com,REJECT-DROP
+DOMAIN-KEYWORD,pangolin-sdk-toutiao,REJECT-DROP
+DOMAIN-KEYWORD,pangolin.snssdk.com,REJECT-DROP
+DOMAIN-KEYWORD,pglstatp-toutiao,REJECT-DROP
+DOMAIN-KEYWORD,dm.bytedance.com,REJECT-DROP
 
 # --- 腾讯优量汇 ---
-DOMAIN-SUFFIX,e.qq.com,REJECT
-DOMAIN-SUFFIX,gdt.qq.com,REJECT
-DOMAIN-SUFFIX,v.gdt.qq.com,REJECT
-DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
-DOMAIN-SUFFIX,pgdt.gtimg.com,REJECT
-DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
-DOMAIN,sdk.e.qq.com,REJECT
-DOMAIN,tangram.e.qq.com,REJECT
-DOMAIN,p.l.qq.com,REJECT
-DOMAIN,us.l.qq.com,REJECT
-DOMAIN,xs.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,e.qq.com,REJECT-DROP
+DOMAIN-SUFFIX,gdt.qq.com,REJECT-DROP
+DOMAIN-SUFFIX,v.gdt.qq.com,REJECT-DROP
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT-DROP
+DOMAIN-SUFFIX,pgdt.gtimg.com,REJECT-DROP
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT-DROP
+DOMAIN,sdk.e.qq.com,REJECT-DROP
+DOMAIN,tangram.e.qq.com,REJECT-DROP
+DOMAIN,p.l.qq.com,REJECT-DROP
+DOMAIN,us.l.qq.com,REJECT-DROP
+DOMAIN,xs.gdt.qq.com,REJECT-DROP
 
 # --- 百度联盟 ---
-DOMAIN-SUFFIX,cpro.baidu.com,REJECT
-DOMAIN-SUFFIX,pos.baidu.com,REJECT
-DOMAIN-SUFFIX,mobads.baidu.com,REJECT
-DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
-DOMAIN-SUFFIX,union.baidu.com,REJECT
-DOMAIN,afd.baidu.com,REJECT
-DOMAIN,als.baidu.com,REJECT
-DOMAIN,duclick.baidu.com,REJECT
-DOMAIN,nadvideo2.baidu.com,REJECT
-DOMAIN,nsclick.baidu.com,REJECT
-DOMAIN,mobads-pre-config.cdn.bcebos.com,REJECT
+DOMAIN-SUFFIX,cpro.baidu.com,REJECT-DROP
+DOMAIN-SUFFIX,pos.baidu.com,REJECT-DROP
+DOMAIN-SUFFIX,mobads.baidu.com,REJECT-DROP
+DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT-DROP
+DOMAIN-SUFFIX,union.baidu.com,REJECT-DROP
+DOMAIN,afd.baidu.com,REJECT-DROP
+DOMAIN,als.baidu.com,REJECT-DROP
+DOMAIN,duclick.baidu.com,REJECT-DROP
+DOMAIN,nadvideo2.baidu.com,REJECT-DROP
+DOMAIN,nsclick.baidu.com,REJECT-DROP
+DOMAIN,mobads-pre-config.cdn.bcebos.com,REJECT-DROP
 
 # --- 快手联盟 ---
-DOMAIN-SUFFIX,e.kuaishou.com,REJECT
-DOMAIN-SUFFIX,cm.kwad.com,REJECT
-DOMAIN-SUFFIX,cm.downloader.commercial.kuaishou.com,REJECT
+DOMAIN-SUFFIX,e.kuaishou.com,REJECT-DROP
+DOMAIN-SUFFIX,cm.kwad.com,REJECT-DROP
+DOMAIN-SUFFIX,cm.downloader.commercial.kuaishou.com,REJECT-DROP
