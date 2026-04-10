@@ -1,36 +1,67 @@
-#!name=鲨鱼记账去开屏 (v4版)
-#!desc=修复火山引擎 SDK 耗时请求导致的启动卡顿问题，全面覆盖所有备胎域名。
-#!author=kiki
+#!name=鲨鱼记账去广告
+#!desc=拦截鲨鱼记账已公开接入的常见广告平台请求，尽量避免误伤同步接口。
+#!author=OpenAI
+#!homepage=https://www.shayujizhang.com/
+#!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Budget.png
+#!tag=去广告, 鲨鱼记账, Loon
+#!system=iOS, iPadOS
+#!date=2026-04-10
 
 [Rule]
-DOMAIN-KEYWORD, pangolin, REJECT
-DOMAIN-SUFFIX, pglstatp.com, REJECT
-DOMAIN-SUFFIX, pggy.com, REJECT
-DOMAIN-SUFFIX, cpro.baidustatic.com, REJECT
-DOMAIN-SUFFIX, pos.baidu.com, REJECT
-DOMAIN-SUFFIX, adnet.qq.com, REJECT
-DOMAIN-SUFFIX, umeng.com, REJECT
+# --- 鲨鱼记账自身接口：不要拦 ---
+DOMAIN,api.shayujizhang.com,DIRECT
+DOMAIN-SUFFIX,shayujizhang.com,DIRECT
 
-[Rewrite]
-# 百度系
-^https?:\/\/(bgg|mobads|mobads-logs|pos)\.baidu\.com reject-dict
-^https?:\/\/cpro\.baidustatic\.com reject-dict
+# --- 穿山甲 / 巨量引擎 / GroMore ---
+DOMAIN-SUFFIX,ad.oceanengine.com,REJECT
+DOMAIN-SUFFIX,pangle.io,REJECT
+DOMAIN-SUFFIX,ad.toutiao.com,REJECT
+DOMAIN-SUFFIX,dm.toutiao.com,REJECT
+DOMAIN-SUFFIX,dsp.toutiao.com,REJECT
+DOMAIN-SUFFIX,nativeapp.toutiao.com,REJECT
+DOMAIN-SUFFIX,partner.toutiao.com,REJECT
+DOMAIN-SUFFIX,track.toutiao.com,REJECT
+DOMAIN-SUFFIX,extlog.snssdk.com,REJECT
+DOMAIN-SUFFIX,sdfp.snssdk.com,REJECT
+DOMAIN-KEYWORD,pangolin-sdk-toutiao,REJECT
+DOMAIN-KEYWORD,pangolin.snssdk.com,REJECT
+DOMAIN-KEYWORD,pglstatp-toutiao,REJECT
+DOMAIN-KEYWORD,dm.bytedance.com,REJECT
 
-# 腾讯系
-^https?:\/\/(win|v2mi|mi)\.gdt\.qq\.com reject-dict
-^https?:\/\/adnet\.qq\.com reject-dict
+# --- 腾讯优量汇 ---
+DOMAIN-SUFFIX,e.qq.com,REJECT
+DOMAIN-SUFFIX,gdt.qq.com,REJECT
+DOMAIN-SUFFIX,v.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.com,REJECT
+DOMAIN-SUFFIX,pgdt.ugdtimg.com,REJECT
+DOMAIN,sdk.e.qq.com,REJECT
+DOMAIN,tangram.e.qq.com,REJECT
+DOMAIN,p.l.qq.com,REJECT
+DOMAIN,us.l.qq.com,REJECT
+DOMAIN,xs.gdt.qq.com,REJECT
 
-# 穿山甲系
-^https?:\/\/api-access\.pangolin-sdk-toutiao.*\.com reject-dict
-^https?:\/\/.*\.pglstatp\.com reject-dict
-^https?:\/\/.*\.pggy\.com reject-dict
+# --- 百度联盟 ---
+DOMAIN-SUFFIX,cpro.baidu.com,REJECT
+DOMAIN-SUFFIX,pos.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads.baidu.com,REJECT
+DOMAIN-SUFFIX,mobads-logs.baidu.com,REJECT
+DOMAIN-SUFFIX,union.baidu.com,REJECT
+DOMAIN,afd.baidu.com,REJECT
+DOMAIN,als.baidu.com,REJECT
+DOMAIN,duclick.baidu.com,REJECT
+DOMAIN,nadvideo2.baidu.com,REJECT
+DOMAIN,nsclick.baidu.com,REJECT
+DOMAIN,mobads-pre-config.cdn.bcebos.com,REJECT
 
-# 友盟统计
-^https?:\/\/.*\.umeng\.com reject-dict
+# --- 快手联盟 ---
+DOMAIN-SUFFIX,e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,cm.kwad.com,REJECT
+DOMAIN-SUFFIX,cm.downloader.commercial.kuaishou.com,REJECT
 
-# 🎯 新增核心：火山引擎底层 SDK (解决 2.73s 超时卡顿的真凶！)
-^https?:\/\/mssdk\.volces\.com reject-dict
-^https?:\/\/.*\.ctobsnssdk\.com reject-dict
-
-[MitM]
-hostname = *.pglstatp.com, *.pggy.com, cpro.baidustatic.com, pos.baidu.com, bgg.baidu.com, mobads.baidu.com, mobads-logs.baidu.com, adnet.qq.com, win.gdt.qq.com, v2mi.gdt.qq.com, api-access.pangolin-sdk-toutiao*.com, *.umeng.com, mssdk.volces.com, *.ctobsnssdk.com
+# --- 友盟统计（不影响主流程时可拦） ---
+DOMAIN,sec.umeng.com,REJECT
+DOMAIN,ulogs.umeng.com,REJECT
+DOMAIN,errlog.umeng.com,REJECT
+DOMAIN,msg.umengcloud.com,REJECT
+DOMAIN-KEYWORD,umeng,REJECT
