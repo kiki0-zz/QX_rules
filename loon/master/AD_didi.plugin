@@ -1,47 +1,47 @@
-#!name=滴滴出行去广告 (kiki修复版 v3)
-#!desc=移除开屏、弹窗、横幅推广。修复打车后主页看不到进行中订单的Bug，解决几秒后广告反弹恢复原样的问题。
-#!author=kiki专属定制 / 终极修正版
+#!name=滴滴出行去广告 (kiki容错版 v4)
+#!desc=修复行程中因为数据结构变化导致脚本崩溃，从而导致界面全盘恢复原样、广告反弹的终极Bug。
+#!author=kiki专属定制 / 容错防崩溃版
 #!tag=去广告
 #!loon_version=3.2.4(787)
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
 #!date=2026-04-15
 
 [Rule]
-# 【保持移除】坚决不拦截 gwp.xiaojukeji.com 和 25641 端口，确保 TCP 长连接存活，这是订单能实时显示的核心。
+# 绝不拦截底层推送，保证订单实时刷新
 
 [Rewrite]
 ^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget reject-dict
 
-# 【恢复拦截】动态配置接口。这个接口就是导致几秒后 UI 强制刷新、广告全部复活的罪魁祸首，必须干掉。
-^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
-
 ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? reject-dict
 
-^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/core\? response-body-json-jq '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
+# 【核心修复1】加入 try...catch。当有订单时，底部导航结构可能缺失或变化，防止报错导致放行原数据。
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/core\? response-body-json-jq 'try (.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center"))) catch . | try (.data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))) catch .'
 
+# 使用原生的 del，它本身极其安全，找不到字段也不会报错崩溃
 ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/fast\? response-body-json-del data.disorder_cards.not_login_bottom_bar data.disorder_cards.riding_code_card data.order_cards.car_owner_widget_card data.order_cards.marketing_card data.order_cards.super_banner_card data.disorder_cards.car_icon.data.icon_info_new_agreement
 
 ^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget\? response-body-json-del data.mult_home_banner
 
-^https:\/\/common\.diditaxi\.com\.cn\/common\/v5\/usercenter\/layout$ response-body-json-jq '.data |= (.instances |= (to_entries | map(select(.key as $k | ["center_base_info_card", "center_tool_card", "center_wallet_finance_card", "center_order_related_card"] | index($k))) | from_entries)) | .data.instances.center_wallet_finance_card.data.view_info |= map(select(.title == "优惠卡券" or .title == "余额" or .title == "福利金"))'
+# 【核心修复2】防止用户中心布局变化引起崩溃
+^https:\/\/common\.diditaxi\.com\.cn\/common\/v5\/usercenter\/layout$ response-body-json-jq 'try (.data.instances |= (to_entries | map(select(.key as $k | ["center_base_info_card", "center_tool_card", "center_wallet_finance_card", "center_order_related_card"] | index($k))) | from_entries)) catch . | try (.data.instances.center_wallet_finance_card.data.view_info |= map(select(.title == "优惠卡券" or .title == "余额" or .title == "福利金"))) catch .'
 
 ^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-dict
 
-# 【黑名单模式优化】放弃了容易导致解析失败的白名单模式，改用黑名单，只精准剔除包含 marketing|super_banner|activity|float_window|popup 等广告特征的模块，保证脚本不会因为意外字段而崩溃回退。
-^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq '.data.instances |= with_entries(select(.key | test("marketing|super_banner|activity|float_window|popup") | not))'
+# 【核心修复3】主页动态布局防崩溃。遇到未知的动态卡片不再报错，而是安全跳过。
+^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq 'try (.data.instances |= with_entries(select(.key | test("marketing|super_banner|activity|float_window|popup") | not))) catch .'
 
-^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/pSFCHomePage\? response-body-json-jq '.data |= (if . == null then null else {hot_route_info, legal_info} end) | . as $root | .data.tab_list = ($root.data.tab_list | map(select(.tab_id == "passenger")))'
+^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/pSFCHomePage\? response-body-json-jq 'try (.data |= (if . == null then null else {hot_route_info, legal_info, tab_list} end) | .data.tab_list |= map(select(.tab_id == "passenger"))) catch .'
 
 ^https:\/\/poi\.map\.xiaojukeji\.com\/mapapi\/recommend\? reject-dict
 
 ^https:\/\/daijia\.kuaidadi\.com:443\/gateway\? response-body-json-del data.variantInfo
-^https:\/\/daijia\.kuaidadi\.com:443\/gateway\? response-body-json-jq '.data |= with_entries(select(.value.isAd != 1))'
+^https:\/\/daijia\.kuaidadi\.com:443\/gateway\? response-body-json-jq 'try (.data |= with_entries(select(.value.isAd != 1))) catch .'
 
-^https:\/\/api\.udache\.com\/intercity\/ticket\/api\/v1\/core\/getFullPageInfoLayout\? response-body-json-jq '.data.disorder_components |= (map(select(.name == "history_order_card" or .name == "inprogress_order_card" or .name == "station_calendar" or .name == "main_card_v2" or .name == "user_history_order")))'
+^https:\/\/api\.udache\.com\/intercity\/ticket\/api\/v1\/core\/getFullPageInfoLayout\? response-body-json-jq 'try (.data.disorder_components |= (map(select(.name == "history_order_card" or .name == "inprogress_order_card" or .name == "station_calendar" or .name == "main_card_v2" or .name == "user_history_order")))) catch .'
 
 ^https:\/\/htwkop\.xiaojukeji\.com:443\/gateway\? response-body-json-del data.didi-bike-homepage-popup data.variantInfo
 
-^https:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\? response-body-json-jq '.data |= map(if .name|IN("daijia_journey_new_tcp_switch","daijia_tcp_init","daijia_tcp_msg_encrypt","daijia_tcp_site_info","daijia_tcp_site_report")then.allow=false else. end)'
+^https:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\? response-body-json-jq 'try (.data |= map(if .name|IN("daijia_journey_new_tcp_switch","daijia_tcp_init","daijia_tcp_msg_encrypt","daijia_tcp_site_info","daijia_tcp_site_report")then.allow=false else. end)) catch .'
 
 [MitM]
 hostname=as.xiaojukeji.com, common.diditaxi.com.cn, conf.diditaxi.com.cn, lion.didialift.com, api.udache.com, ct.xiaojukeji.com, res.xiaojukeji.com, 112.53.55.225, 139.199.240.84, 113.46.225.*, 162.14.157.*, 123.207.209.*, 120.241.142.*, 120.241.143.*, 116.85.*
