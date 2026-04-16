@@ -1,36 +1,40 @@
-#!name=滴滴出行去广告 (禁反弹终极版 v5)
-#!desc=彻底封锁滴滴通过备用通道拉取广告的可能性。
+#!name=滴滴出行去广告 (全量伪装版 v6)
+#!desc=针对2026最新版滴滴。解决“反弹恢复”和“去广告失效”问题，采用欺骗式修改技术。
 #!author=kiki
 #!tag=去广告
 #!loon_version=3.2.4(787)
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
 
 [Rule]
-# 1. 封杀滴滴已知的 HTTPDNS 调度（防止它绕过域名重定向）
+# 1. 封锁 QUIC 协议，强制滴滴走 HTTPS，否则 MitM 无法拦截 UDP 流量
+AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
+# 2. 封锁 HTTPDNS，防止滴滴绕过系统 DNS 解析获取直连 IP
 DOMAIN, httpdns.xiaojukeji.com, REJECT
 DOMAIN, amap-proxy.jd.com, REJECT
-
-# 2. 封杀 UDP 443 (QUIC) 协议（很多反弹是通过 QUIC 协议绕过常规拦截的）
-AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-
-# 3. 拦截滴滴各种营销活动/广告域名（直接拒绝，不给它恢复的机会）
-DOMAIN, gwp.xiaojukeji.com, REJECT
+# 3. 广告追踪屏蔽
 DOMAIN, ad-v.xiaojukeji.com, REJECT
-DOMAIN, dpm.xiaojukeji.com, REJECT
+DOMAIN, tracking.xiaojukeji.com, REJECT
 
 [Rewrite]
-# 核心：对那些容易导致反弹的请求，直接返回空字典，而不是修改它
-^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? reject-dict
-^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
-^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-dict
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget reject-dict
+# --- 首页布局欺骗 (关键) ---
+# 不再直接 reject 动态配置，而是通过修改让它以为配置已加载，但内容是空的
+^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf response-body-json-jq 'try (.data.conf_list = []) catch .'
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? response-body-json-jq 'try (.data.disorder_cards = {}) catch .'
 
-# 针对主页布局，不做复杂的 JQ 过滤（容易崩），直接删除最显眼的广告位字段
-^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-del data.instances.dache_main_marketing_card data.instances.dache_main_super_banner_card data.instances.dache_main_activity_card
+# --- 主页卡片精准剔除 (保留订单卡片) ---
+# instances 是滴滴主页的核心，我们只删除明确的广告字段，保留所有包含 "order", "trip", "map", "core" 的卡片
+^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq 'try (.data.instances |= with_entries(select(.key | test("marketing|banner|activity|float|popup|adv") | not))) catch .'
 
-# 订单显示修正（这次不做过滤，直接原样放行这些关键接口，确保订单万无一失）
-# ^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/pSFCHomePage\? (已移除拦截)
+# --- 底部导航与弹窗欺骗 ---
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/core\? response-body-json-jq 'try (.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center"))) catch . | try (.data.order_cards.nav_list_card.data |= map(select(.nav_id | test("marketing|banner") | not))) catch .'
+
+# --- 个人中心净化 ---
+^https:\/\/common\.diditaxi\.com\.cn\/common\/v5\/usercenter\/layout$ response-body-json-jq 'try (.data.instances |= with_entries(select(.key | test("wallet|base|order|tool")))) catch .'
+
+# --- 其他顽固接口 ---
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget\? reject-dict
+^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-200
 
 [MitM]
-# 简化主机名，重点针对 API 和 CONF
-hostname = conf.diditaxi.com.cn, api.udache.com, common.diditaxi.com.cn, res.xiaojukeji.com, ct.xiaojukeji.com
+# 扩大 MitM 范围，确保覆盖所有可能的配置下发域名
+hostname = *.xiaojukeji.com, *.diditaxi.com.cn, api.udache.com, lion.didialift.com, *.kuaidadi.com
