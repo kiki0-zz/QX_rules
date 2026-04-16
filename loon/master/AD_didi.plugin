@@ -1,25 +1,24 @@
-#!name=滴滴出行去广告 (kiki修复版 v2)
-#!desc=移除开屏、弹窗、横幅推广。修复原版打车后主页看不到进行中订单的严重Bug。
-#!author=kiki专属定制 / 修正版
+#!name=滴滴出行去广告 (kiki修复版 v3)
+#!desc=移除开屏、弹窗、横幅推广。修复打车后主页看不到进行中订单的Bug，解决几秒后广告反弹恢复原样的问题。
+#!author=kiki专属定制 / 终极修正版
 #!tag=去广告
 #!loon_version=3.2.4(787)
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
 #!date=2026-04-15
 
 [Rule]
-# 【已移除】gwp.xiaojukeji.com 和 25641 端口拦截，防止 TCP 长连接断开导致订单状态不推送
+# 【保持移除】坚决不拦截 gwp.xiaojukeji.com 和 25641 端口，确保 TCP 长连接存活，这是订单能实时显示的核心。
 
 [Rewrite]
 ^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget reject-dict
 
-# 【修复4】取消对 broker 长连接轮询的拦截，保证订单状态实时同步
-# ^https:\/\/lion\.didialift\.com\/broker\/\? reject-dict
+# 【恢复拦截】动态配置接口。这个接口就是导致几秒后 UI 强制刷新、广告全部复活的罪魁祸首，必须干掉。
+^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
 
 ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? reject-dict
 
 ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/core\? response-body-json-jq '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
 
-# [修复1] 移除了 data.disorder_cards.communicate_card，防止行程中的司机沟通面板被误杀
 ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/fast\? response-body-json-del data.disorder_cards.not_login_bottom_bar data.disorder_cards.riding_code_card data.order_cards.car_owner_widget_card data.order_cards.marketing_card data.order_cards.super_banner_card data.disorder_cards.car_icon.data.icon_info_new_agreement
 
 ^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget\? response-body-json-del data.mult_home_banner
@@ -28,11 +27,8 @@
 
 ^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-dict
 
-# [修复2] 注释掉了动态配置拦截，这玩意儿经常负责下发实时的行程弹窗，容易导致主页状态不同步
-# ^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
-
-# [修复3] 进一步放宽主页实例的匹配规则，加入 map|address|driver，确保进行中的行程卡片、地图模块不被删除
-^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq '.data |= (.instances |= (to_entries | map(select(.key | test("feed_back_|dache_main_member|order|trip|progress|dache_main_core_icon|dache_main_card_|map|address|driver"))) | from_entries))'
+# 【黑名单模式优化】放弃了容易导致解析失败的白名单模式，改用黑名单，只精准剔除包含 marketing|super_banner|activity|float_window|popup 等广告特征的模块，保证脚本不会因为意外字段而崩溃回退。
+^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? response-body-json-jq '.data.instances |= with_entries(select(.key | test("marketing|super_banner|activity|float_window|popup") | not))'
 
 ^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/pSFCHomePage\? response-body-json-jq '.data |= (if . == null then null else {hot_route_info, legal_info} end) | . as $root | .data.tab_list = ($root.data.tab_list | map(select(.tab_id == "passenger")))'
 
