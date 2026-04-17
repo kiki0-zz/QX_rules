@@ -1,27 +1,32 @@
-#!name=Spotify 解锁 (终极纯净版 v10)
-#!desc=2026.04 针对最新版修复。去掉所有暴力拦截，仅保留核心权限解锁。解决无法播放、0字节报错问题。
-#!author=kiki & app2smile
+#!name=Spotify 解锁 (墨鱼冲突修复版 v11)
+#!desc=2026.04 针对最新版修复。专门解决“墨鱼去广告”导致的无法播放、0字节报错。
+#!author=kiki
 #!tag=解锁
 #!loon_version=3.2.1
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
 
 [Rule]
-# 1. 拦截 QUIC 协议 (这是必须的，否则所有脚本都会被绕过)
+# 1. 拦截 QUIC 协议 (必须，防止绕过脚本)
 AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-# 2. 确保流量走代理
+# 2. 保证 Spotify 走代理
 DOMAIN-KEYWORD, spotify, PROXY
 
 [Rewrite]
-# 仅仅删除缓存校验，不拦截请求。让广告接口正常通过，由 App 内部的“会员状态”去决定播不播广告。
+# 【核心修复】强制覆盖墨鱼的 reject-img。
+# 返回空字典 {} 而不是图片，App 才能通过自检，恢复播放功能。
+^https:\/\/spclient\.wg\.spotify\.com\/ads\/v2\/config reject-dict
+^https:\/\/spclient\.wg\.spotify\.com\/ad-logic\/ads reject-dict
+
+# 删除缓存校验，确保权限脚本生效
 ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [Script]
-# 获取歌手和专辑列表
+# 解锁歌手/专辑列表
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=10, tag=spotify_json
 
 # 核心：伪装 Premium 会员状态
 http-response ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js, requires-body=true, binary-body-mode=true, timeout=10, tag=spotify_proto
 
 [MitM]
-# 核心域名，确保覆盖截图中的 spclient.wg.spotify.com
-hostname = spclient.wg.spotify.com, *-spclient.spotify.com
+# 增加 spclient 域名，确保优先级高于其他插件
+hostname = spclient.wg.spotify.com, *.spclient.spotify.com, spclient.wg.spotify.com, *-spclient.spotify.com
