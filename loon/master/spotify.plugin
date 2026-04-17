@@ -1,29 +1,31 @@
-#!name=Spotify 解锁 (Loon 终极修复版)
-#!desc=2026.04 针对最新版 Spotify 优化。修复 MitM 匹配失效、屏蔽 QUIC 绕过。支持无限切歌、无广告、自由排序。
-#!author=app2smile & kiki
+#!name=Spotify 解锁 (播放修复版 v8)
+#!desc=修复因强力拦截广告接口导致的无法播放问题。针对 guc3 等全域节点适配。
+#!author=kiki
 #!tag=解锁
 #!loon_version=3.2.1
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
 
 [Rule]
-# 1. 核心规则：屏蔽 UDP 443 (QUIC)。如果 Spotify 走这个协议，所有的去广告和解锁脚本都会失效！
+# 1. 必须封锁 UDP 443，防止它走 QUIC 协议绕开脚本
 AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-# 2. 走代理（确保能连上服务器）
+# 2. 确保流量走代理
 DOMAIN-KEYWORD, spotify, PROXY
-DOMAIN-SUFFIX, pscdn.co, PROXY
-DOMAIN-SUFFIX, scdn.co, PROXY
 
 [Rewrite]
-# 强制删除缓存校验，让脚本每次都能成功改包
+# 【修正】不再直接 REJECT 广告接口，而是返回一个空的 200 状态，骗过 App 的自检
+^https:\/\/spclient\.wg\.spotify\.com\/ads\/v2\/config reject-200
+^https:\/\/spclient\.wg\.spotify\.com\/ad-logic\/ads reject-200
+
+# 核心：删除缓存校验头
 ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [Script]
-# 解锁歌手/专辑列表正常展示
+# 歌手/专辑视图
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=10, tag=spotify_json
 
-# 解锁 Premium 权限（核心功能）
+# 核心 Premium 解锁
 http-response ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js, requires-body=true, binary-body-mode=true, timeout=10, tag=spotify_proto
 
 [MitM]
-# 【修正】删除了错误的 http:// 和路径，这是 Loon 能够拦截流量的前提
-hostname = spclient.wg.spotify.com, *-spclient.spotify.com
+# 【终极适配】包含你截图中出现的 guc3 等所有 spclient 变体域名
+hostname = spclient.wg.spotify.com, *-spclient.spotify.com, *.spotify.com
