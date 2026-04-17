@@ -1,0 +1,29 @@
+#!name=Spotify 解锁 (修复版)
+#!desc=2024.04 修复失效问题。解除随机播放限制，支持切歌，去除音频广告。注意：无法解锁极高音质(服务端限制)。
+#!author=app2smile
+#!tag=去广告
+#!loon_version=3.2.1
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
+
+[Rule]
+# 如果无法登录，请确保开启了全局代理或针对 Spotify 走代理
+DOMAIN-SUFFIX, pscdn.co, PROXY
+DOMAIN-SUFFIX, scdn.co, PROXY
+DOMAIN-SUFFIX, spotify.com, PROXY
+DOMAIN-SUFFIX, spoti.fi, PROXY
+DOMAIN-KEYWORD, spotify, PROXY
+
+[Rewrite]
+# 核心：删除缓存校验请求头，强制服务端返回完整配置，以便脚本修改
+^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/user-customization-service\/v1\/customize$ header-del if-none-match
+
+[Script]
+# 解锁歌手/专辑列表正常展示
+http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=10, tag=spotifyJson
+
+# 解锁 Premium 权限（Protobuf 修改）
+http-response ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js, requires-body=true, binary-body-mode=true, timeout=10, tag=spotifyProto
+
+[MitM]
+# 必须使用正确的域名，不能包含 http:// 或其他多余字符
+hostname = spclient.wg.spotify.com, *-spclient.spotify.com
