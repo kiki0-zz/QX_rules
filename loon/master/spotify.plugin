@@ -1,32 +1,27 @@
-#!name=Spotify 解锁 (播放修复版 v9)
-#!desc=2026.04 针对最新版适配。修复“0字节”返回导致的无法播放问题。请务必按照说明清理缓存。
-#!author=kiki
+#!name=Spotify 解锁 (终极纯净版 v10)
+#!desc=2026.04 针对最新版修复。去掉所有暴力拦截，仅保留核心权限解锁。解决无法播放、0字节报错问题。
+#!author=kiki & app2smile
 #!tag=解锁
 #!loon_version=3.2.1
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
 
 [Rule]
-# 1. 拦截 QUIC 协议（必须，否则流量会绕过脚本）
+# 1. 拦截 QUIC 协议 (这是必须的，否则所有脚本都会被绕过)
 AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-# 2. 保证 Spotify 走代理
+# 2. 确保流量走代理
 DOMAIN-KEYWORD, spotify, PROXY
 
 [Rewrite]
-# 【关键修改】从 reject-200 改为 reject-dict。
-# 这会返回 "{}"，App 能解析成功，但拿不到广告配置，从而恢复播放功能。
-^https:\/\/spclient\.wg\.spotify\.com\/ads\/v2\/config reject-dict
-^https:\/\/spclient\.wg\.spotify\.com\/ad-logic\/ads reject-dict
-
-# 删除缓存校验头，确保脚本能实时修改 Premium 状态
+# 仅仅删除缓存校验，不拦截请求。让广告接口正常通过，由 App 内部的“会员状态”去决定播不播广告。
 ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [Script]
-# 解锁歌手/专辑列表
+# 获取歌手和专辑列表
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=10, tag=spotify_json
 
-# 核心：解锁 Premium 权限
+# 核心：伪装 Premium 会员状态
 http-response ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js, requires-body=true, binary-body-mode=true, timeout=10, tag=spotify_proto
 
 [MitM]
-# 【修正】标准的 Loon MitM 域名格式，确保拦截所有区域的节点
+# 核心域名，确保覆盖截图中的 spclient.wg.spotify.com
 hostname = spclient.wg.spotify.com, *-spclient.spotify.com
