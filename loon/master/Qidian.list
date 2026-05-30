@@ -1,16 +1,22 @@
-# > 起点读书 (包含阅文集团相关域名)
-DOMAIN-SUFFIX, qidian.com
-DOMAIN-SUFFIX, qdmm.com
-DOMAIN-SUFFIX, qdstatic.com
-DOMAIN-SUFFIX, yuewen.com
-DOMAIN-SUFFIX, readnovel.com
-DOMAIN-SUFFIX, hongxiu.com
-DOMAIN-SUFFIX, xs8.cn
-DOMAIN-SUFFIX, webnovel.com
+# > 起点读书 (核心域名放行/分流)
+DOMAIN-SUFFIX, qidian.com, DIRECT
+DOMAIN-SUFFIX, qdmm.com, DIRECT
+DOMAIN-SUFFIX, qdstatic.com, DIRECT
+DOMAIN-SUFFIX, yuewen.com, DIRECT
+DOMAIN-SUFFIX, readnovel.com, DIRECT
+DOMAIN-SUFFIX, hongxiu.com, DIRECT
+DOMAIN-SUFFIX, xs8.cn, DIRECT
+DOMAIN-SUFFIX, webnovel.com, DIRECT
 
-# > 广告及数据上报 (针对起点 App 内的嵌入广告)
-DOMAIN-SUFFIX, adstats.tencent.com
-DOMAIN-SUFFIX, e.qq.com
-DOMAIN-SUFFIX, gdt.qq.com
-DOMAIN-SUFFIX, bugly.qq.com
-DOMAIN-KEYWORD, qidian
+# > 广告及数据上报 (优化后，保障福利中心广告正常加载)
+DOMAIN-SUFFIX, adstats.tencent.com, REJECT
+DOMAIN-SUFFIX, gdt.qq.com, REJECT
+DOMAIN-SUFFIX, bugly.qq.com, REJECT
+
+# 针对福利视频广告的精准放行 (必须直连，否则广告打不开)
+DOMAIN, tangram.e.qq.com, DIRECT
+DOMAIN, oth.str.mdt.qq.com, DIRECT
+DOMAIN, wximg.wxs.qq.com, DIRECT
+
+# 如果你原本的规则后面有统一的 REJECT 策略，可以保留下面这行拦截非核心的 e.qq.com
+# DOMAIN-SUFFIX, e.qq.com, REJECT
