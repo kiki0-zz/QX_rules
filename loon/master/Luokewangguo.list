@@ -1,3 +1,10 @@
+# 洛克王国世界 HTTPDNS / 腾讯服务
+IP-CIDR,182.254.116.117/32,DIRECT,no-resolve
+DOMAIN-SUFFIX,anticheatexpert.com,DIRECT
+DOMAIN-SUFFIX,qq.com,DIRECT
+DOMAIN-SUFFIX,tencent.com,DIRECT
+DOMAIN-SUFFIX,gtimg.com,DIRECT
+
 # ===== 洛克王国：世界 =====
 DOMAIN-SUFFIX,sginput.qq.com,DIRECT
 DOMAIN-SUFFIX,qpic.cn,DIRECT
