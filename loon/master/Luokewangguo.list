@@ -1,0 +1,22 @@
+# ===== 洛克王国：世界 =====
+DOMAIN-SUFFIX,sginput.qq.com,DIRECT
+DOMAIN-SUFFIX,qpic.cn,DIRECT
+DOMAIN-SUFFIX,gtimg.com,DIRECT
+DOMAIN-SUFFIX,gtimg.cn,DIRECT
+DOMAIN-SUFFIX,game.qq.com,DIRECT
+DOMAIN-SUFFIX,gcloud.qq.com,DIRECT
+DOMAIN-SUFFIX,gcloudcs.com,DIRECT
+DOMAIN-SUFFIX,qq.com,DIRECT
+DOMAIN-SUFFIX,tencent.com,DIRECT
+DOMAIN-SUFFIX,wegame.com,DIRECT
+
+# 腾讯登录
+DOMAIN-SUFFIX,ptlogin2.qq.com,DIRECT
+DOMAIN-SUFFIX,qqlogin.qq.com,DIRECT
+DOMAIN-SUFFIX,connect.qq.com,DIRECT
+DOMAIN-SUFFIX,openmobile.qq.com,DIRECT
+
+# 腾讯游戏接口
+DOMAIN-SUFFIX,sginput.qq.com,DIRECT
+DOMAIN-SUFFIX,gdtimg.com,DIRECT
+DOMAIN-SUFFIX,myqcloud.com,DIRECT
