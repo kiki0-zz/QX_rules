@@ -1,6 +1,17 @@
-# > Pornhub (含视频流 CDN)
-DOMAIN-SUFFIX, pornhub.com
-DOMAIN-SUFFIX, phncdn.com
-DOMAIN-SUFFIX, phprcdn.com
-DOMAIN-SUFFIX, pornhubpremium.com
-DOMAIN-KEYWORD, pornhub
+
+# > Pornhub
+DOMAIN-SUFFIX,pornhub.com
+DOMAIN-SUFFIX,pornhub.org
+DOMAIN-SUFFIX,pornhubpremium.com
+
+# > Pornhub CDN
+DOMAIN-SUFFIX,phncdn.com
+DOMAIN-SUFFIX,phprcdn.com
+
+# > Pornhub 页面依赖 / 广告框架
+DOMAIN-SUFFIX,trafficjunky.net
+DOMAIN-SUFFIX,trafficjunky.com
+DOMAIN-SUFFIX,etahub.com
+DOMAIN-SUFFIX,adtng.com
+
+DOMAIN-KEYWORD,pornhub
