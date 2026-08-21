@@ -1,4 +1,8 @@
-// Netease Music VIP Clean (UI Level)
+// Name: Netease Music VIP Clean (UI Level)
+// Author: kiki
+// Updated: 2026-08-21
+// Description: 实验性响应体字段处理脚本。
+
 let body = $response.body;
 
 try {

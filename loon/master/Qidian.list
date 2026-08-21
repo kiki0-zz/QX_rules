@@ -1,3 +1,7 @@
+# NAME: Qidian
+# AUTHOR: kiki
+# UPDATED: 2026-08-21
+
 # > 起点读书 (核心域名放行/分流)
 DOMAIN-SUFFIX, qidian.com, DIRECT
 DOMAIN-SUFFIX, qdmm.com, DIRECT

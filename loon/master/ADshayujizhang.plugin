@@ -1,6 +1,8 @@
 #!name=鲨鱼记账去开屏 (终极秒开版)
 #!desc=修复官方开屏配置接口 (itg/art) 导致的 3 秒启动卡顿，极致丝滑。
 #!author=kiki
+#!tag=去广告
+# UPDATED: 2026-08-21
 
 [Rule]
 DOMAIN-KEYWORD, pangolin, REJECT

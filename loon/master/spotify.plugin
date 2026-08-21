@@ -4,6 +4,7 @@
 #!tag=解锁
 #!loon_version=3.2.1
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
+# UPDATED: 2026-08-21
 
 [Rule]
 # 1. 拦截 QUIC 协议 (必须，防止绕过脚本)

@@ -4,6 +4,7 @@
 #!tag=去广告
 #!loon_version=3.2.4(787)
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
+# UPDATED: 2026-08-21
 
 [Rule]
 # 1. 封锁 QUIC 协议，强制滴滴走 HTTPS，否则 MitM 无法拦截 UDP 流量
