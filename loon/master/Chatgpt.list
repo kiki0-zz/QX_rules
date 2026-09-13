@@ -1,48 +1,141 @@
-# NAME: Chatgpt
+# NAME: ChatGPT
 # AUTHOR: kiki
-# UPDATED: 2026-08-21
-# HOST: 7
-# HOST-KEYWORD: 1
-# HOST-SUFFIX: 24
-# IP-ASN: 1
-# IP-CIDR: 2
-# TOTAL: 35
+# UPDATED: 2026-09-13
+# DESCRIPTION: ChatGPT / OpenAI 全功能分流规则
+# Web / Login / Files / Images / Voice / WebSocket / Cloudflare / WorkOS
 
-DOMAIN,browser-intake-datadoghq.com
-DOMAIN,chat.openai.com.cdn.cloudflare.net
-DOMAIN,openai-api.arkoselabs.com
-DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-DOMAIN,openaicomproductionae4b.blob.core.windows.net
-DOMAIN,production-openaicom-storage.azureedge.net
-DOMAIN,static.cloudflareinsights.com
+# ==================================================
+# OpenAI / ChatGPT 核心
+# ==================================================
 
-DOMAIN-SUFFIX,ai.com
-DOMAIN-SUFFIX,algolia.net
-DOMAIN-SUFFIX,api.statsig.com
-DOMAIN-SUFFIX,auth0.com
 DOMAIN-SUFFIX,chatgpt.com
-DOMAIN-SUFFIX,chatgpt.livekit.cloud
-DOMAIN-SUFFIX,client-api.arkoselabs.com
-DOMAIN-SUFFIX,events.statsigapi.net
-DOMAIN-SUFFIX,featuregates.org
-DOMAIN-SUFFIX,host.livekit.cloud
-DOMAIN-SUFFIX,identrust.com
-DOMAIN-SUFFIX,intercom.io
-DOMAIN-SUFFIX,intercomcdn.com
-DOMAIN-SUFFIX,launchdarkly.com
+DOMAIN-SUFFIX,openai.com
 DOMAIN-SUFFIX,oaistatic.com
 DOMAIN-SUFFIX,oaiusercontent.com
-DOMAIN-SUFFIX,observeit.net
-DOMAIN-SUFFIX,openai.com
-DOMAIN-SUFFIX,openaiapi-site.azureedge.net
-DOMAIN-SUFFIX,openaicom.imgix.net
-DOMAIN-SUFFIX,segment.io
-DOMAIN-SUFFIX,sentry.io
-DOMAIN-SUFFIX,stripe.com
+DOMAIN-SUFFIX,oaistatsig.com
+
+# ==================================================
+# OpenAI 登录 / 身份验证
+# ==================================================
+
+DOMAIN-SUFFIX,auth.openai.com
+DOMAIN,auth0.openai.com
+DOMAIN,setup.auth.openai.com
+
+# WorkOS - 新版登录 / SSO / 身份验证
+DOMAIN-SUFFIX,workos.com
+DOMAIN-SUFFIX,workoscdn.com
+DOMAIN,workos.imgix.net
+
+# Cloudflare 人机验证
+DOMAIN,challenges.cloudflare.com
+
+# ==================================================
+# ChatGPT Web / Desktop / Mobile
+# ==================================================
+
+DOMAIN,chat.openai.com
+DOMAIN,desktop.chat.openai.com
+DOMAIN,android.chat.openai.com
+DOMAIN,ios.chat.openai.com
+DOMAIN,tcr9i.chat.openai.com
+
+# ==================================================
+# ChatGPT WebSocket / 实时通信
+#
+# ws.chatgpt.com 已被 DOMAIN-SUFFIX,chatgpt.com 覆盖
+# ==================================================
+
+DOMAIN,ws.chatgpt.com
+
+# ==================================================
+# 文件上传 / 下载 / 图片 / 静态资源
+# ==================================================
+
+DOMAIN-SUFFIX,openaimerge.com
+
+DOMAIN,openaicomproductionae4b.blob.core.windows.net
+DOMAIN,production-openaicom-storage.azureedge.net
+DOMAIN,openaiapi-site.azureedge.net
+DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+DOMAIN,openaicom.imgix.net
+
+# ==================================================
+# ChatGPT Voice / 实时语音
+# ==================================================
+
+DOMAIN-SUFFIX,chatgpt.livekit.cloud
+DOMAIN-SUFFIX,host.livekit.cloud
 DOMAIN-SUFFIX,turn.livekit.cloud
 
-DOMAIN-KEYWORD,openai
+# ==================================================
+# Statsig / 功能开关 / 配置
+# ==================================================
 
-IP-CIDR,24.199.123.28/32,no-resolve
-IP-CIDR,64.23.132.171/32,no-resolve
-IP-ASN,20473,no-resolve
+# 当前 OpenAI 自有 Statsig
+DOMAIN-SUFFIX,oaistatsig.com
+
+# 旧版兼容
+DOMAIN,api.statsig.com
+DOMAIN,events.statsigapi.net
+DOMAIN-SUFFIX,featuregates.org
+
+# ==================================================
+# 风控 / Captcha / Arkose
+# ==================================================
+
+DOMAIN,openai-api.arkoselabs.com
+DOMAIN,client-api.arkoselabs.com
+
+# ==================================================
+# Intercom / ChatGPT 支持服务
+# ==================================================
+
+DOMAIN-SUFFIX,intercom.io
+DOMAIN-SUFFIX,intercomcdn.com
+
+# ==================================================
+# 邮件 / 登录验证
+# ==================================================
+
+DOMAIN-SUFFIX,ct.sendgrid.net
+
+# ==================================================
+# Stripe
+# ==================================================
+
+DOMAIN,js.stripe.com
+
+# ==================================================
+# Sentry / Datadog
+# ==================================================
+
+DOMAIN,o207216.ingest.sentry.io
+DOMAIN,o33249.ingest.sentry.io
+DOMAIN,rum.browser-intake-datadoghq.com
+
+# ==================================================
+# Cloudflare
+# ==================================================
+
+DOMAIN,static.cloudflareinsights.com
+DOMAIN,chat.openai.com.cdn.cloudflare.net
+
+# ==================================================
+# Apple / ChatGPT iOS 验证
+# ==================================================
+
+DOMAIN,humb.apple.com
+
+# ==================================================
+# 历史 OpenAI 域名 / 兼容
+# ==================================================
+
+DOMAIN-SUFFIX,ai.com
+
+# ==================================================
+# 最后兜底
+# 覆盖部分未来新增且域名包含 openai 的服务
+# ==================================================
+
+DOMAIN-KEYWORD,openai
