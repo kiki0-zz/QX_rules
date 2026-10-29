@@ -7,9 +7,7 @@
 # UPDATED: 2026-08-21
 
 [Rule]
-# 1. 拦截 QUIC 协议 (必须，防止绕过脚本)
-AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-# 2. 保证 Spotify 走代理
+# 1. 保证 Spotify 走代理
 DOMAIN-KEYWORD, spotify, PROXY
 
 [Rewrite]
