@@ -160,3 +160,31 @@
 .pzm-mobile .pzm-torrent>[data-pzm-field="seeders"] a{color:#157342}
 .pzm-mobile .pzm-torrent>td:not([data-pzm-field="title"]):not([data-pzm-field="category"]) a{display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 @media(min-width:700px){.pzm-mobile .pzm-torrent>td[data-pzm-field="time"]{grid-column:auto}.pzm-mobile .pzm-torrent{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+/* Home: full-width titles and readable metadata, without horizontal lists. */
+.pzm-mobile .pzm-home-list{display:block!important;width:100%!important;min-width:0!important;max-width:100%;border:0!important;border-collapse:separate;background:transparent;overflow:visible!important;margin:10px 0}
+.pzm-mobile .pzm-home-list[hidden],.pzm-mobile .pzm-home-list[style*="display: none"],.pzm-mobile .pzm-home-list[style*="display:none"]{display:none!important}
+.pzm-mobile .pzm-home-list::before{content:none!important}
+.pzm-mobile .pzm-home-list>tbody{display:block!important;width:100%!important;min-width:0!important;max-width:100%}
+.pzm-mobile .pzm-home-list>tbody>.pzm-home-header{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pzm-mobile .pzm-home-list>tbody>.pzm-home-header>td{display:block;width:auto!important;border:0!important;background:transparent;padding:4px;font-size:14px;white-space:normal!important}
+.pzm-mobile .pzm-home-list>tbody>.pzm-home-static-header{display:none!important}
+.pzm-mobile .pzm-home-list>tbody>.pzm-home-card{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;min-width:0;width:100%;max-width:100%;margin:10px 0;padding:14px;background:#fff!important;border:1px solid #dce5e9;border-radius:12px}
+.pzm-mobile .pzm-home-card>td{display:block!important;min-width:0!important;width:auto!important;max-width:100%;height:auto!important;white-space:normal!important;word-break:normal;overflow-wrap:anywhere;border:0!important;background:transparent!important;text-align:left!important;padding:0!important;font-size:14px;line-height:1.65}
+.pzm-mobile .pzm-home-card>td::before{content:attr(data-pzm-home-label);display:block;font-size:12px;color:#647b87;font-weight:400;line-height:1.5;margin-bottom:3px}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="title"]{grid-column:1/-1;order:-3;font-size:15px}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="title"]::before{display:none}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="title"] a{display:block;min-height:44px;max-width:100%;width:auto!important;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;line-height:1.65;font-size:16px}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="title"] a>b{font-weight:700}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="author"]{grid-column:1/-1;order:-2}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="author"] a{display:inline-block;max-width:100%;min-height:44px;padding:9px 0;white-space:normal!important;word-break:normal;overflow-wrap:anywhere;font-size:14px;line-height:1.65;vertical-align:middle}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="views"],.pzm-mobile .pzm-home-card>[data-pzm-home-field="count"],.pzm-mobile .pzm-home-card>[data-pzm-home-field="seeders"],.pzm-mobile .pzm-home-card>[data-pzm-home-field="leechers"]{font-weight:650}
+.pzm-mobile .pzm-home-card>[data-pzm-home-field="seeders"]{color:#157342}
+.pzm-mobile .pzm-home-stats{width:100%!important;min-width:0!important}
+.pzm-mobile .pzm-home-stats>tbody>tr{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}
+.pzm-mobile .pzm-home-stats>tbody>tr>td{width:auto!important;min-width:0;white-space:normal!important;overflow-wrap:anywhere}
+.pzm-mobile .pzm-home-stats [data-pzm-home-stat="0"]{grid-column:1;grid-row:1}
+.pzm-mobile .pzm-home-stats [data-pzm-home-stat="1"]{grid-column:1;grid-row:2;font-weight:650}
+.pzm-mobile .pzm-home-stats [data-pzm-home-stat="2"]{grid-column:2;grid-row:1}
+.pzm-mobile .pzm-home-stats [data-pzm-home-stat="3"]{grid-column:2;grid-row:2;font-weight:650}
+.pzm-mobile .pzm-home-stats>tbody>.pzm-home-stats-section>td{grid-column:1/-1!important;grid-row:auto!important}
