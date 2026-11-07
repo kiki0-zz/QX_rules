@@ -1,0 +1,13 @@
+#!name = PTZone iPhone 移动版
+#!desc = 基于 2026-11-07 实站检查；保留原生链接和表单；支持原版与页面回退
+#!author = PTZone Mobile
+#!system = iOS
+#!system_version = 15.4
+#!loon_version = 3.5.1(983)
+#!date = 2026-11-07
+
+[Script]
+response if ${url} ~= /^https:\/\/ptzone\.xyz\/(?:index\.php|torrents\.php|details\.php|forums\.php|usercp\.php|userdetails\.php|messages\.php|subtitles\.php|topten\.php|rules\.php|faq\.php|contactstaff\.php|task\.php|medal\.php|claim\.php|mybonus\.php|friends\.php|getrss\.php|upload\.php|invite\.php|attendance\.php|login\.php|shoutbox\.php|sendmessage\.php)?(?:\?|$)/i && ${request.method} == "GET" && ${response.status} == 200 && ${response.header['Content-Type']} ~= /^text\/html(?:\s*;|$)/i then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/ptzone-mobile.js") with requires_body=true, timeout=10, tag="PTZone Mobile"
+
+[Mitm]
+hostname = ptzone.xyz

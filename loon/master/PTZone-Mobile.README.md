@@ -1,0 +1,25 @@
+# PTZone iPhone 移动版（0.1.0）
+
+在 Loon 插件列表添加：
+
+```text
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/PTZone-Mobile.plugin
+```
+
+要求 **Loon 3.5.1 (983)+ / iOS 15.4+**。开启插件、脚本及 MitM；本机安装并完全信任 Loon 证书。插件仅声明 `ptzone.xyz`，无需通配符。Safari 对本站关闭「请求桌面网站」，重新载入页面。
+
+配套脚本：`https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/ptzone-mobile.js`。插件会自动下载脚本；CSS 和浏览器代码已经嵌入，不需要另外注入。单独的 CSS / browser.js 仅供审阅。
+
+基于 2026-11-07 登录后的实站检查。种子表格转卡片，保留全部原始统计、促销、标签、评分、下载、收藏、搜索、排序、分页及表单节点。提供菜单、账户信息、底部导航、高级筛选以及显示设置。显示偏好只记录在本机本站 localStorage。
+
+「显示设置」可全站恢复原版、仅为当前类页面关闭、重置本机偏好。原版切换会撤销样式、标记及 viewport，并保留已填表单。关闭插件前先切原版，再关闭插件并重新载入。
+
+没有自动签到、下载、收藏、发送、发帖、兑换或设置保存，也没有 Cookie/Passkey 读取、网络上报和日志代码。只匹配精确白名单内的 GET HTML 文档；下载端点、API、二进制、附件、XHR、Range 和非目标主机不改写。强制 CSP 或未知模板保留原版。
+
+验证状态：43 项本地回归通过；内置桌面浏览器在 320/375/390/430/844px 的 40 个主要页面视图未出现整页横向溢出；真实站点已检查搜索、排序链接、分页、详情导航、返回与刷新。**尚未进行 iPhone Safari + Loon 真机验收。**真实下载/收藏写入、消息/评论/帖子提交未执行。当前账号无真实排行榜权限，消息正文未单独核验，抽奖独立模板保留原版，POST 返回的验证页可能显示原版。
+
+首次验收建议：打开首页 → 种子 → 搜索及免费筛选 → 排序/翻页 → 详情 → 用户自行下载/收藏 → 论坛/个人中心/消息 → 原版切换 → 关闭插件。每步检查标题、统计、条件和权限提示与原版一致。反馈时提供页面路径、iOS/Loon 版本及截图；不要发送 Cookie、密码、Passkey 或带签名的下载/RSS 地址。
+
+维护时先针对问题页面关闭适配，更新已识别模板与字段映射，回归原链接、FormData、节点身份和异步更新。不要扩大 URL 规则覆盖未检查的 API/动作端点。网站新增强制 CSP 时保留原版，不删除安全策略。
+
+官方格式与版本依据：[Loon Script](https://nsloon.app/docs/Script/script_v2/)、[Script API](https://nsloon.app/docs/Script/script_api/)、[MitM](https://nsloon.app/docs/MitM/)。
