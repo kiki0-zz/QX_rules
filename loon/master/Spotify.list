@@ -1,0 +1,46 @@
+# NAME: Spotify (Kiki Stable Routing)
+# AUTHOR: kiki
+# UPDATED: 2026-11-12
+# FORMAT: Loon Remote Rule (.list) - select policy in Loon, do not add policy here.
+# GOAL: Keep Spotify control, login, playback and audio CDN on the SAME policy.
+# SOURCES: blackmatrix7, Repcz, LM-Firefly, Spotify Community reports.
+# NOTICE: This file only routes traffic. It does NOT block ads or unlock Premium.
+# Do not combine with another Spotify.list; configure this subscription above broad DIRECT/REJECT rules.
+# Suggested policy: a stable manual proxy node/group; avoid per-request switching during diagnosis.
+
+# 1) Spotify API, login, account, images, downloads and playback (spclient, dealer, apresolve).
+DOMAIN-SUFFIX,spotify.com
+DOMAIN-SUFFIX,spotifycdn.com
+DOMAIN-SUFFIX,spotifycdn.net
+
+# 2) Main audio/image/video CDNs (incl. audio4-fa.scdn.co, audio4-gm-fb.spotifycdn.com).
+DOMAIN-SUFFIX,scdn.co
+DOMAIN-SUFFIX,pscdn.co
+
+# 3) Akamai / Fastly audio and video edges; include names beyond spotify.com.
+DOMAIN-SUFFIX,audio-ak-spotify-com.akamaized.net
+DOMAIN-SUFFIX,audio4-ak-spotify-com.akamaized.net
+DOMAIN-SUFFIX,heads-ak-spotify-com.akamaized.net
+DOMAIN-SUFFIX,heads4-ak-spotify-com.akamaized.net
+DOMAIN-SUFFIX,spotify-com.akamaized.net
+DOMAIN,spotify.com.edgesuite.net
+DOMAIN,spotify.map.fastly.net
+DOMAIN,spotify.map.fastlylb.net
+
+# 4) Short links and adjacent Spotify services.
+DOMAIN-SUFFIX,spoti.fi
+DOMAIN-SUFFIX,spotify.app.link
+DOMAIN-SUFFIX,byspotify.com
+DOMAIN-SUFFIX,spotify-everywhere.com
+DOMAIN-SUFFIX,spotilocal.com
+DOMAIN-SUFFIX,tospotify.com
+DOMAIN,cdn-spotify-experiments.conductrics.com
+
+# 5) Catch newly introduced Spotify-branded hostnames, incl. CDN subdomains.
+DOMAIN-KEYWORD,spotify
+
+# Deliberately omitted:
+# - IP-CIDR: fixed Cloud/shared IPs can change or route unrelated traffic.
+# - PROCESS-NAME: ignored by Loon on iOS.
+# - USER-AGENT: does not cover every non-HTTP audio connection.
+# - REJECT: ad blocking is handled separately by spotify.plugin.
