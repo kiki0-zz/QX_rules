@@ -1,0 +1,42 @@
+# NAME: Instagram · Kiki Stable
+# AUTHOR: kiki
+# UPDATED: 2026-11-12
+# FORMAT: Loon remote rule list; select policy when subscribing.
+# GOAL: Instagram API, images, Reels, Stories and DM routing.
+# SOURCES: Moli-X, Repcz, v2fly, MetaCubeX (2026-11-12), poohyeban.
+# IMPORTANT: fbcdn / fbsbx are shared with Facebook; use the SAME stable policy for
+# Instagram.list and Facebook.list. Domain rules cannot distinguish which app
+# requested a shared CDN host. Read Instagram.README.md before assigning policies.
+# No ad blocking, HTTPS interception, fixed IP ranges or blanket Meta ASN rules.
+
+# Instagram web/app/API: www, i, graph, b-graph, api and variants.
+DOMAIN-SUFFIX,instagram.com
+DOMAIN-SUFFIX,cdninstagram.com
+
+# Instagram image / Reels / Story / video delivery and service endpoints.
+DOMAIN-SUFFIX,igcdn.com
+DOMAIN-SUFFIX,igsonar.com
+DOMAIN-SUFFIX,igtv.com
+
+# Instagram share links and related official domains.
+DOMAIN-SUFFIX,instagr.am
+DOMAIN-SUFFIX,ig.me
+DOMAIN-SUFFIX,oninstagram.com
+DOMAIN-SUFFIX,instagram-brand.com
+DOMAIN-SUFFIX,instagrampartners.com
+
+# Shared Meta media CDN used by both Instagram and Facebook.
+# If the Facebook subscription matches these first, its policy will handle them.
+# Set both rule subscriptions to the same stable policy for predictable behavior.
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,fbcdn.com
+DOMAIN-SUFFIX,fbsbx.com
+DOMAIN-SUFFIX,fbsbx.net
+DOMAIN,fbcdn-a.akamaihd.net
+
+# Meta's shared delivery/edge infrastructure.
+DOMAIN-SUFFIX,tfbnw.net
+
+# Not included: blanket facebook.com, whatsapp.com, threads.net, meta.com,
+# DOMAIN-KEYWORD,instagram, PROCESS-NAME, IP-ASN, old fixed IP-CIDR.
+# Shared Facebook API / Meta login endpoints remain covered by Facebook.list.
