@@ -1,33 +1,47 @@
-#!name=Spotify 解锁 (墨鱼冲突修复版 v11)
-#!desc=2026.04 针对最新版修复。专门解决“墨鱼去广告”导致的无法播放、0字节报错。
-#!author=kiki
-#!tag=解锁
-#!loon_version=3.2.1
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DiDi.png
-# UPDATED: 2026-08-21
+#!name=Spotify 去广告 · Kiki v12
+#!desc=Spotify 去播放广告、首页/搜索广告及部分 Premium 功能；增强 9.1.98+ 配置接口兼容，失效时请查看日志。
+#!author=kiki (参考 001ProMax、app2smile、devchristian1337)
+#!tag=去广告
+#!loon_version=3.5.1(983)
+#!homepage=https://github.com/kiki0-zz/QX_rules/blob/main/loon/master/spotify.plugin
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
+#!date=2026-11-12
+# v12: 替换旧版已过时的 Protobuf 响应处理；补齐较新版 Spotify 配置接口。
+# 仅安装本插件：请关闭可莉、墨鱼或其他 Spotify 解锁/去广告插件，避免响应脚本互相覆盖。
+# 需要 Loon HTTPS 解密证书可信、MitM 正常；更新插件后彻底退出 Spotify 并重新登录。
+# 音质不要设置“超高”。客户端或服务端更新后可能失效，不保证所有广告都能移除。
+# 依赖的第三方 JS（devchristian1337 / app2smile）由其作者维护，未复制到本仓库。
 
 [Rule]
-# 1. 拦截 QUIC 协议 (必须，防止绕过脚本)
-AND, ((PROTOCOL, UDP), (DEST-PORT, 443)), REJECT
-# 2. 保证 Spotify 走代理
-DOMAIN-KEYWORD, spotify, PROXY
+# 只阻断 Spotify 自身的 QUIC，避免原 v11 全局 UDP/443 拦截影响其他 App。
+AND, ((DOMAIN-SUFFIX, spotify.com), (PROTOCOL, QUIC)), REJECT
 
 [Rewrite]
-# 【核心修复】强制覆盖墨鱼的 reject-img。
-# 返回空字典 {} 而不是图片，App 才能通过自检，恢复播放功能。
-^https:\/\/spclient\.wg\.spotify\.com\/ads\/v2\/config reject-dict
-^https:\/\/spclient\.wg\.spotify\.com\/ad-logic\/ads reject-dict
+# 删除条件缓存请求头：避免服务端返回 304 而跳过 Protobuf 修改。
+^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/user-customization-service\/v1\/customize(?:\?[^#]*)?$ header-del if-none-match
+# Spotify 9.1.98+ 的配置/账号属性接口。
+^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/(?:remote-config-resolver\/v\d+\/configuration|nebula\/v\d+\/configuration\/attributes)(?:\?[^#]*)?$ header-del if-none-match
 
-# 删除缓存校验，确保权限脚本生效
-^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/user-customization-service\/v1\/customize$ header-del if-none-match
+# 广告相关接口：仅匹配 Spotify spclient，避免误拦截其他产品。
+# pendragon 返回空 JSON，降低异常响应引发播放失败的概率。
+^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/pendragon\/ reject-dict
+# 播放广告、开屏广告、会员推广接口。
+^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/(?:ads\/|ad-logic\/|[^?#]*\/ad-on-app-open|premium-marketing\/upsellOffer) reject
+# 广告回传接口返回 HTTP 200 空响应。
+^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/gabo-receiver-service reject-200
 
 [Script]
-# 解锁歌手/专辑列表
-http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=10, tag=spotify_json
+# 兼容歌手/专辑列表在 iPhone 上的展示。
+http-request ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/(?:artistview\/v1\/artist|album-entity-view\/v2\/album)\/ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js, timeout=15, tag=Spotify 列表适配
 
-# 核心：伪装 Premium 会员状态
-http-response ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js, requires-body=true, binary-body-mode=true, timeout=10, tag=spotify_proto
+# 清理新版首页、搜索页与滚动列表中的广告内容，数据格式不匹配时原样放行。
+http-response ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/browsita\/v\d+\/browse script-path=https://raw.githubusercontent.com/devchristian1337/loon-plugins/main/Scripts/Spotify/spot-NoSearchAd.js, requires-body=true, binary-body-mode=true, timeout=15, tag=Spotify 搜索广告
+http-response ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/casita\/v\d+\/home\/ script-path=https://raw.githubusercontent.com/devchristian1337/loon-plugins/main/Scripts/Spotify/spot-NoHomeAd.js, requires-body=true, binary-body-mode=true, timeout=15, tag=Spotify 首页广告
+http-response ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/scrollsita\/v\d+\/scroll\/spotify script-path=https://raw.githubusercontent.com/devchristian1337/loon-plugins/main/Scripts/Spotify/spot-NoScrollAd.js, requires-body=true, binary-body-mode=true, timeout=15, tag=Spotify 信息流广告
+
+# 只使用一套 Protobuf 补丁，避免可莉/app2smile 重复修改同一响应。
+http-response ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/(?:bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)(?:\?[^#]*)?$ script-path=https://raw.githubusercontent.com/devchristian1337/loon-plugins/main/Scripts/Spotify/spot-proto-ev3.js, requires-body=true, binary-body-mode=true, timeout=15, tag=Spotify 权限配置
+http-response ^https:\/\/(?:spclient\.wg|[\w-]+-spclient)\.spotify\.com(?::443)?\/(?:remote-config-resolver\/v\d+\/configuration|nebula\/v\d+\/configuration\/attributes)(?:\?[^#]*)?$ script-path=https://raw.githubusercontent.com/devchristian1337/loon-plugins/main/Scripts/Spotify/spot-proto-ev3.js, requires-body=true, binary-body-mode=true, timeout=15, tag=Spotify 新版配置
 
 [MitM]
-# 增加 spclient 域名，确保优先级高于其他插件
-hostname = spclient.wg.spotify.com, *.spclient.spotify.com, spclient.wg.spotify.com, *-spclient.spotify.com
+hostname = spclient.wg.spotify.com, *spclient.spotify.com
