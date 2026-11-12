@@ -1,0 +1,46 @@
+# NAME: Facebook · Kiki Stable
+# AUTHOR: kiki
+# UPDATED: 2026-11-12
+# FORMAT: Loon remote rules; choose the outbound policy when subscribing.
+# SCOPE: Facebook + Facebook Messenger (including Photos, Videos, Reels, and login).
+# POLICY: Keep API, media CDN, and chat on one stable proxy policy when diagnosing slow loading.
+# NOTE: This is a ROUTING list, not an ad blocker. It cannot guarantee app-side speed.
+# SOURCES: Moli-X, Repcz, v2fly/domain-list-community, MetaCubeX/meta-rules-dat (2026-11-12).
+# Deliberately exclude broad Facebook/Meta ASN and old fixed IP ranges; see Facebook.README.md.
+
+# Facebook website, Graph API, auth, app services and static resources.
+DOMAIN-SUFFIX,facebook.com
+DOMAIN-SUFFIX,facebook.net
+DOMAIN-SUFFIX,fb.com
+DOMAIN-SUFFIX,fb.me
+
+# Media/photo/video CDN: scontent, video, static, Reels, attachment downloads.
+DOMAIN-SUFFIX,fbcdn.net
+DOMAIN-SUFFIX,fbcdn.com
+DOMAIN-SUFFIX,fbsbx.com
+DOMAIN-SUFFIX,fbsbx.net
+DOMAIN,fbcdn-a.akamaihd.net
+DOMAIN-SUFFIX,facebook.com.edgesuite.net
+DOMAIN-SUFFIX,facebook.com.edgekey.net
+
+# Facebook internal networking/edge and share/deep links.
+DOMAIN-SUFFIX,tfbnw.net
+DOMAIN-SUFFIX,fb.watch
+DOMAIN-SUFFIX,fbwat.ch
+DOMAIN-SUFFIX,fb.gg
+DOMAIN-SUFFIX,fburl.com
+
+# Messenger (Facebook-integrated chat).
+DOMAIN-SUFFIX,messenger.com
+DOMAIN-SUFFIX,fbmessenger.com
+DOMAIN-SUFFIX,m.me
+
+# Cross-service Meta account and Facebook business/auth links.
+DOMAIN-SUFFIX,meta.com
+DOMAIN-SUFFIX,facebookmail.com
+DOMAIN-SUFFIX,facebookbrand.com
+DOMAIN-SUFFIX,facebooklive.com
+
+# Intentionally not included: instagram.com, cdninstagram.com, whatsapp.com,
+# whatsapp.net, threads.net, oculus.com, IP-ASN 32934, DOMAIN-KEYWORD,facebook.
+# If you already use separate Instagram / WhatsApp rules, this avoids stealing their traffic.
