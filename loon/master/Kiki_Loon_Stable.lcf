@@ -1,0 +1,283 @@
+# ============================================================
+# Kiki Loon · 自用主配置（脱敏分享版）
+# Version: 1.2 | 2026-11-13
+# Maintainer: kiki | Repo: https://github.com/kiki0-zz/QX_rules
+# 根据已有配置整理；原始基础配置参考 Moli-X (github.com/Moli-X)
+# 注意：本文件没有订阅 token、本地代理凭据或 MITM 私钥。
+# 必须在自己手机上恢复机场订阅，并重新设置私有证书才能完整使用。
+# 插件有效条目从原文件按原顺序保留，不做增删或修改。
+# v1.2 图标版：23 个策略组均配置 img-url；只修改图标及版本说明。
+# ============================================================
+
+[General]
+# Kiki 稳定基线。避免同时启用多个 DoQ/DoH3 解析器，便于诊断视频连接问题。
+ip-mode = v4-only
+ipv6-vif = off
+dns-reject-mode = NXDomain
+udp-fallback-mode = REJECT
+allow-udp-proxy = true
+fast-switch = true
+sni-sniffing = true
+
+# DNS：优先 DoH；普通 DNS 作兜底。保持单一加密解析协议，降低排查复杂度。
+dns-server = system,223.5.5.5,119.29.29.29
+doh-server = https://223.5.5.5/dns-query
+
+# 网络本地绕过与工作环境例外：原有记录保留。
+skip-proxy = localhost,*.local,passenger.t3go.cn,e.crashlytics.com,captive.apple.com,app.yinxiang.com,injections.adguard.org,local.adguard.org,cable.auth.com,www.baidu.com,yunbusiness.ccb.com,10.0.0.0/8,100.64.0.0/10,127.0.0.1/32,169.254.0.0/16,172.16.0.0/12,192.168.0.0/16,224.0.0.0/4,240.0.0.0/4,::1/128,fc00::/7,fd00::/8,fe80::/10,ff00::/8,2001::/32,2001:db8::/32,2002::/16,::ffff:0:0:0:0/1,::ffff:128:0:0:0/1,teams.microsoft.com,deltaww.com.cn,book.yunzhan365.com
+bypass-tun = 10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,172.16.0.0/12,192.0.0.0/24,192.0.2.0/24,192.88.99.0/24,192.168.0.0/16,198.18.0.0/15,198.51.100.0/24,203.0.113.0/24,224.0.0.0/4,255.255.255.255/32
+real-ip = msftconnecttest.com,msftncsi.com,*.msftconnecttest.com,*.msftncsi.com,*.srv.nintendo.net,*.stun.playstation.net,xbox.*.microsoft.com,*.xboxlive.com,*.battlenet.com.cn,*.battlenet.com,*.blzstatic.cn,*.battle.net
+
+# 连接稳定性与测试：HTTP 探测不等于视频吞吐测速。
+proxy-test-url = http://www.gstatic.com/generate_204
+internet-test-url = http://wifi.vivo.com.cn/generate_204
+test-timeout = 5
+interface-mode = auto
+disconnect-on-policy-change = true
+disable-stun = false
+
+# 本机访问默认关闭
+allow-wifi-access = false
+wifi-access-http-port = 1234
+wifi-access-socks5-port = 1235
+
+# 数据库与解析器：沿用原先稳定资源
+geoip-url = https://geodata.kelee.one/Country-Masaiki.mmdb
+ipasn-url = https://geodata.kelee.one/GeoLite2-ASN-P3TERX.mmdb
+resource-parser = https://github.com/sub-store-org/Sub-Store/releases/latest/download/sub-store-parser.loon.min.js
+
+[Remote Proxy]
+# 此处仅存放 *本机私有版本* 中的真实订阅链接。公开仓库请留空。
+# 原始订阅 = https://你的私有订阅地址
+# 在设备里填入真实地址后，才会有可用代理节点。
+
+[Remote Filter]
+# 从所有订阅/本地节点中根据名称分类；若机场命名特殊，可在 Loon 内修改筛选词
+全部 = NameRegex, FilterKey = "^(?!.*网易云).*"
+日本 = NameRegex, FilterKey = "(?i)(日本|东京|大阪|埼玉|川日|泉日|Japan|(?<![A-Za-z])(?:JP|TY|OS)(?![A-Za-z]))"
+美国 = NameRegex, FilterKey = "(?i)(美国|美西|美东|达拉斯|波特兰|洛杉矶|凤凰城|拉斯维加斯|西雅图|硅谷|Dallas|United States|USA|(?<![A-Za-z])US(?![A-Za-z]))"
+狮城 = NameRegex, FilterKey = "(?i)(新加坡|狮城|Singapore|(?<![A-Za-z])SG(?![A-Za-z]))"
+香港 = NameRegex, FilterKey = "(?i)(香港|港|Hong Kong|(?<![A-Za-z])HK(?![A-Za-z]))"
+台湾 = NameRegex, FilterKey = "(?i)(台湾|台北|Taiwan|(?<![A-Za-z])TW(?![A-Za-z]))"
+德国 = NameRegex, FilterKey = "(?i)(德国|法兰克福|Germany|(?<![A-Za-z])DE(?![A-Za-z]))"
+英国 = NameRegex, FilterKey = "(?i)(英国|伦敦|United Kingdom|(?<![A-Za-z])UK(?![A-Za-z]))"
+澳大利亚 = NameRegex, FilterKey = "(?i)(澳大利亚|澳洲|悉尼|墨尔本|Australia|(?<![A-Za-z])AU(?![A-Za-z]))"
+荷兰 = NameRegex, FilterKey = "(?i)(荷兰|阿姆斯特丹|Netherlands|(?<![A-Za-z])NL(?![A-Za-z]))"
+爱沙尼亚 = NameRegex, FilterKey = "(?i)(爱沙尼亚|Estonia)"
+hy2节点 = NameKeyword, FilterKey = "hy"
+
+[Proxy]
+# 分享版主动移除三条本地节点的真实地址、端口、UUID、密码及公钥等。
+# 若需要重新启用个人 VLESS / Hysteria2 节点，请在 Loon 本机编辑此区段。
+# 请勿把恢复凭据后的文件提交至公开仓库。
+
+[Proxy Group]
+# 核心主策略：未命中任何规则的海外流量默认走美国候选；节点要在地区组内手动挑选
+主代理 = select,视频优选,全球节点,美国节点,日本节点,狮城节点,香港节点,台湾节点,local节点,DIRECT,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
+全球节点 = select,美国节点,日本节点,狮城节点,香港节点,台湾节点,local节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/European_Union.png
+美国节点 = select,美国,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/United_States.png
+日本节点 = select,日本,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Japan.png
+狮城节点 = select,狮城,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Singapore.png
+香港节点 = select,香港,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Hong_Kong.png
+台湾节点 = select,台湾,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Taiwan.png
+# 你的自建节点已从分享版本剔除；恢复本地节点后可手动加入该组
+local节点 = select,美国节点,日本节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
+
+# 视频组：默认优先手动选中的美国节点；可随时切换日本/新加坡
+视频优选 = select,美国节点,视频自动备用,日本节点,狮城节点,local节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Streaming.png
+# 仅判断能否连接；并不检测 YouTube / Instagram / TikTok 的持续播放速度
+# 建议后续先缩减到 5～8 个实测优秀节点，再启用该自动备用组
+视频自动备用 = fallback,美国,狮城,日本,url = http://www.gstatic.com/generate_204,interval = 600,max-timeout = 3000,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available.png
+
+# 应用策略：保留你熟悉的策略组名称，避免插件和规则找不到策略
+YouTube = select,视频优选,美国节点,日本节点,狮城节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/youtube(2).png
+Tiktok = select,视频优选,美国节点,日本节点,狮城节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/tiktok.png
+Instagram = select,视频优选,美国节点,日本节点,狮城节点,local节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Instagram.png
+Google = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/google(2).png
+Telegram = select,日本节点,美国节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/telegram(1).png
+Twitter = select,视频优选,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/twitter(2).png
+Chatgpt = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/chatgpt(white1).png
+Claude = select,美国节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/claude(1).png
+Speedtest = select,美国节点,视频优选,日本节点,狮城节点,DIRECT,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/03CNSoft/speedtest(2).png
+ping0 = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Cloudflare.png
+movie = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/Orz-3/mini/master/Color/Bili.png
+Qidian = select,DIRECT,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/03CNSoft/qidian.png
+海外服务 = select,全球节点,香港节点,台湾节点,美国节点,日本节点,狮城节点,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Macao.png
+
+[Remote Rule]
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Instagram.list, policy=Instagram, tag=ins分流, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/Twitter.list, policy=Twitter, tag=Twitter分流, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Luokewangguo.list, policy=DIRECT, tag=洛克分流@kiki, enabled=true
+https://raw.githubusercontent.com/ddgksf2013/Filter/refs/heads/master/AppleIntelligence.list, policy=Google, tag=苹果AI分流, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Qidian.list, policy=DIRECT, tag=起点分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Tiktok.list, policy=Tiktok, tag=Tiktok分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Claude.list, policy=Claude, tag=Claude分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Pornhub.list, policy=movie, tag=pornhub分流, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Speedtest.list, policy=Speedtest, tag=Speedtest分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/YouTube.list, policy=YouTube, tag=YouTube分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Chatgpt.list, policy=Chatgpt, tag=ChatGPT分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Telegram.list, policy=Telegram, tag=Telegram分流@kiki, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Google.list, policy=Google, tag=Google分流@kiki, enabled=true
+
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/TeamViewer.list, policy=DIRECT, tag=远程控制, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/AppStore.list, policy=DIRECT, tag=苹果商店, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/AppleID.list, policy=DIRECT, tag=苹果账号, enabled=true
+
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/Apple.list, policy=DIRECT, tag=苹果分流, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/DouYin.list, policy=DIRECT, tag=国内抖音, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/WeChat.list, policy=DIRECT, tag=微信分流, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/Lan.list, policy=DIRECT, tag=本地分流, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/GitLab.list, policy=DIRECT, tag=储存仓库, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/ChinaASN.list, policy=DIRECT, tag=ASN直连, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/AppleProxy.list, policy=海外服务, tag=苹果代理, enabled=true
+
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/GitHub.list, policy=日本节点, tag=github分流, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Spotify.list, policy=日本节点, tag=Spotify, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/Notion.list, policy=海外服务, tag=国外笔记, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Facebook.list, policy=Instagram, tag=Facebook分流, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/TestFlight.list, policy=海外服务, tag=TestFlight, enabled=true
+
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/HTTPDNS.Block.list, policy=REJECT, tag=阻止常见DNS, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Rules/Reject.list, policy=REJECT, tag=广告列表, enabled=true
+
+[Rule]
+# 私人站点和既有业务例外（保留你的分流习惯）
+DOMAIN-SUFFIX,kikinode.top,DIRECT
+DOMAIN-SUFFIX,kikinode.site,DIRECT
+DOMAIN-SUFFIX,themoviedb.org,DIRECT
+DOMAIN-SUFFIX,tmdb.org,DIRECT
+DOMAIN-SUFFIX,ptzone.xyz,DIRECT
+DOMAIN-SUFFIX,pomo.mom,DIRECT
+DOMAIN-SUFFIX,iyzico.com,DIRECT
+DOMAIN-SUFFIX,g2apay.com,DIRECT
+DOMAIN,hm.baidu.com,DIRECT
+DOMAIN,xs.gdt.qq.com,DIRECT
+DOMAIN,ii.gdt.qq.com,DIRECT
+DOMAIN-SUFFIX,ping0.cc,ping0
+DOMAIN,p14-buy.itunes.apple.com,海外服务
+# 使用代理兜底，不再将未命中流量强制发往日本
+GEOIP,CN,DIRECT
+FINAL,主代理
+
+[Host]
+# 保留常用国内域名的 DNS 指定；为避免泄露/绑定家庭网络，移除按 Wi-Fi SSID 的专用 DNS。
+# 同时移除了 Google 推送服务器固定 IP 和 TestFlight 强制公共 DNS。
+*.taobao.com = server:223.5.5.5
+*.tmall.com = server:223.5.5.5
+*.jd.com = server:119.28.28.28
+*.qq.com = server:119.29.29.29
+*.tencent.com = server:119.29.29.29
+*.alicdn.com = server:223.5.5.5
+*.aliyun.com = server:223.5.5.5
+*.weixin.com = server:119.28.28.28
+*.163.com = server:119.29.29.29
+*.126.com = server:119.29.29.29
+*.126.net = server:119.29.29.29
+*.127.net = server:119.29.29.29
+*.netease.com = server:119.29.29.29
+*.mi.com = server:119.29.29.29
+*.xiaomi.com = server:119.29.29.29
+*.bilibili.com = server:119.29.29.29
+dl.google.com = server:119.29.29.29
+dl.l.google.com = server:119.29.29.29
+# 🟢>>>>>>>>>>>节点筛选<<<<<<<<<<<<<<<🟢
+
+[Script]
+# 保留空区段，方便后续扩展。
+
+[Remote Script]
+https://raw.githubusercontent.com/Moli-X/Resources/main/Loon/Task.conf, tag=莫离脚本合集, enabled=false
+
+
+# 🟢>>>>>>>>>>>插件模块<<<<<<<<<<<<<<<🟢
+
+[Rewrite]
+# 保留空区段，方便后续扩展。
+
+[Remote Rewrite]
+# 保留空区段，方便后续扩展。
+
+[Plugin]
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plugin, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/PTZone-Mobile.plugin, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Remove_ads_by_keli.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Node_detection_tool.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/DouBan_remove_ads.lpx, enabled=true
+http://script.hub/file/_start_/https://ddgksf2013.top/rewrite/StartUpAds.conf/_end_/StartUpAds.sgmodule?type=qx-rewrite&n=%E5%A2%A8%E9%B1%BC%E5%8E%BB%E5%BC%80%E5%B1%8F2.0%E5%8E%BB%E5%B9%BF%E5%91%8A%40ddgksf2013+%E5%B7%B2%E6%8A%93%E5%8C%85400%E4%BD%99%E5%BA%94%E7%94%A8%E5%8E%BB%E5%BC%80%E5%B1%8F&headers=User-Agent:surge&del=true&jqEnabled=true&target=loon-plugin&category=ddgksf2013, enabled=true
+https://ddgksf2013.top/module/ScriptHub.Loon.plugin, enabled=true
+https://kelee.one/Tool/Loon/Lpx/12306_remove_ads.lpx, enabled=false
+https://kelee.one/Tool/Loon/Lpx/Weixin_external_links_unlock.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/JD_Price.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Tieba_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/YoudaoNote_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/RedPaper_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/FleaMarket_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/WexinMiniPrograms_Remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Weixin_Official_Accounts_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Weibo_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Weibo_intl_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/NeteaseCloudMusic_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/SF-Express_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/QiDian_remove_ads.lpx, enabled=false
+https://kelee.one/Tool/Loon/Lpx/TV_Assistant_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Kuwo_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/QuarkBrowser_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/KuaiDi100_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/JD_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/HantingHotels_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/MrHema_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Umetrip_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Amap_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/TaobaoTravel_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/DragonRead_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Douyu_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/DiDi_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Dewu_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Damai_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/ColorfulClouds_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Cainiao_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/BooHee_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Bilibili_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Beike_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/BaiduNetDisk_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/MeetYou_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/AppleWeatherEnhancer.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/XunLei_remove_ads.lpx, enabled=true
+http://script.hub/file/_start_/https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.conf/_end_/spotify.sgmodule?type=qx-rewrite&n=Spotify%E4%BC%9A%E5%91%98%E8%A7%A3%E9%94%81%40app2smile+%E8%A7%A3%E9%94%81Premium%E4%BC%9A%E5%91%98&headers=User-Agent:surge&del=true&jqEnabled=true&target=loon-plugin&category=app2smile, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Zhihu_remove_ads.lpx, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/AD_umetrip.plugin, enabled=true
+https://kelee.one/Tool/Loon/Lpx/DingdongMaicai_remove_ads.lpx, enabled=false
+https://kelee.one/Tool/Loon/Lpx/MaiMai_remove_ads.lpx, enabled=true
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/ADshayujizhang.plugin, enabled=true
+https://github.com/NSRingo/Maps/releases/latest/download/iRingo.Maps.plugin, enabled=true
+https://kelee.one/Tool/Loon/Lpx/BoxJs.lpx, policy=美国节点, enabled=true
+https://kelee.one/Tool/Loon/Lpx/XiaomiSpeaker_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/XiaoHeiHe_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/MailMaster_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Taobao_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/PinDuoDuo_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Keep_remove_ads.lpx, enabled=true
+https://kelee.one/Tool/Loon/Lpx/Block_HTTPDNS.lpx, pin=true, enabled=true
+https://kelee.one/Tool/Loon/Lpx/BlockAdvertisers.lpx, pin=true, enabled=true
+http://script.hub/file/_start_/https://raw.githubusercontent.com/ddgksf2013/Rewrite/master/Function/UnblockURLinWeChat.conf/_end_/UnblockURLinWeChat.sgmodule?type=qx-rewrite&n=%E5%BE%AE%E4%BF%A1%E5%8A%9F%E8%83%BD%E5%A2%9E%E5%BC%BA%40zZPiglet+%E5%BE%AE%E4%BF%A1110%E8%A7%A3%E9%94%81%E8%A2%AB%E5%B1%8F%E8%94%BD%E7%9A%84URL&headers=User-Agent:surge&del=true&jqEnabled=true&target=loon-plugin&category=zZPiglet, enabled=true
+https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/config/Loon.plugin, policy=美国节点, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/CaixinMedia_remove_ads.plugin, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/Keep_remove_ads.plugin, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/PinDuoDuo_remove_ads.plugin, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/YouTube_remove_ads.plugin, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/DualSubs.YouTube.plugin, enabled=true
+https://github.com/Moli-X/Resources/raw/main/Loon/JianYing.plugin, tag=剪映, enabled=true
+https://github.com/Moli-X/Resources/raw/main/Loon/Grow.plugin, tag=Grow破解, enabled=true
+https://github.com/Moli-X/Resources/raw/main/Loon/Baiducloud.plugin, tag=百度云加速, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/General.plugin, tag=配置增强, enabled=false
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/DNS.plugin, tag=DNS映射, enabled=true
+#https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/BlockAdvertisers.plugin, enabled=true
+https://github.com/Moli-X/Tool/raw/X/Loon/Plugin/Kelee/HTTPDNS.Block.plugin, enabled=true
+
+[MITM]
+# 私钥及口令已从分享版移除。需要 HTTPS Rewrite 时，在自己的 Loon 里重新生成/安装证书。
+# 证书是私密的，严禁将带 ca-p12/ca-passphrase 的完整版提交到 GitHub。
+hostname = wxavip-up.ezrpro.cn,-*snssdk.com,-*amemv.com,hweb-mbf.huazhu.com,nicegram.cloud,*.amap.com,appss.linhongshi.com,api.revenuecat.com
+skip-server-cert-verify = false
+# ca-p12 = (在 Loon 本机生成；不要公开)
+# ca-passphrase = (在 Loon 本机生成；不要公开)
