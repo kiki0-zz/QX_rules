@@ -1,10 +1,79 @@
-# NAME: Net.Coffee IP 检测（Kiki版）
+# NAME: Net.Coffee 全站检测分流（Kiki版）
 # AUTHOR: kiki0-zz
 # UPDATED: 2026-11-14
 # FORMAT: Loon Remote Rule (.list)
-# 代替原 Ping0 检测站分流。导入 Loon「远程规则」后自行选择策略组/节点。
-# 仅匹配 Net.Coffee IP 查询、评分、Claude 和 GPT 检测站域名。
-# 不覆盖 ChatGPT / Claude 等第三方探测域名，这些仍遵循各自分流规则。
-# 无需修改主配置，不自动切换主代理。
+#
+# 在 Loon「远程规则」中订阅后，为此规则集选定一个策略组/节点。
+# 只改本 .list；不修改主配置、策略组选项或运行模式。
+# 目的：让 Net.Coffee 首页的已知 IP 回显服务与 35+ 站点检测
+# 尽可能走同一策略，避免部分结果因为 DIRECT/其他策略显示本地 IP。
+#
+# 注意：Loon iOS 无法只对「来自 ip.net.coffee 网页」的跨站请求分流。
+# 下列域名在其他 App、Safari 页面中访问时，也可能匹配本规则。
+# 本规则会覆盖常用服务、国内网站；如果不希望影响日常流量，不要启用本扩展版。
+# 若已有同域名分流规则在前面先匹配，本列表可能不会生效；
+# 需要在 Loon 的请求记录核实命中优先级。
+# Safari 的 WebRTC/STUN/其他 UDP 或 IP 直连探针不一定能被域名规则覆盖。
+#
+# Net.Coffee 自身
+DOMAIN-SUFFIX,net.coffee
 
-DOMAIN-SUFFIX,ip.net.coffee
+# 常见 IP 回显与地理信息查询
+DOMAIN-SUFFIX,ipify.org
+DOMAIN-SUFFIX,ipinfo.io
+DOMAIN-SUFFIX,ip.sb
+DOMAIN-SUFFIX,ident.me
+DOMAIN-SUFFIX,icanhazip.com
+DOMAIN-SUFFIX,ifconfig.co
+DOMAIN-SUFFIX,ipapi.co
+DOMAIN-SUFFIX,ipapi.is
+DOMAIN-SUFFIX,ipwho.is
+
+# 国内检测站点（仅站点相关域名，不使用 GEOIP/CN 强制规则）
+DOMAIN-SUFFIX,163.com
+DOMAIN-SUFFIX,bytedance.com
+DOMAIN-SUFFIX,douyin.com
+DOMAIN-SUFFIX,taobao.com
+DOMAIN-SUFFIX,weixin.qq.com
+DOMAIN-SUFFIX,qualcomm.cn
+
+# 海外分流检测：社交与 AI
+DOMAIN-SUFFIX,discord.com
+DOMAIN-SUFFIX,x.com
+DOMAIN-SUFFIX,medium.com
+DOMAIN-SUFFIX,quora.com
+DOMAIN-SUFFIX,signal.org
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN-SUFFIX,sora.com
+DOMAIN-SUFFIX,grok.com
+DOMAIN-SUFFIX,pixpix.com
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-SUFFIX,midjourney.com
+DOMAIN-SUFFIX,mistral.ai
+
+# 海外分流检测：工具、金融与媒体
+DOMAIN-SUFFIX,coinbase.com
+DOMAIN-SUFFIX,okx.com
+DOMAIN-SUFFIX,binance.com
+DOMAIN-SUFFIX,crypto.com
+DOMAIN-SUFFIX,zoom.us
+DOMAIN-SUFFIX,deepl.com
+DOMAIN-SUFFIX,wise.com
+DOMAIN-SUFFIX,poe.com
+DOMAIN-SUFFIX,notion.so
+DOMAIN-SUFFIX,shopify.com
+DOMAIN-SUFFIX,godaddy.com
+DOMAIN-SUFFIX,producthunt.com
+DOMAIN-SUFFIX,crunchyroll.com
+
+# 海外分流检测：CDN / 软件开发
+DOMAIN-SUFFIX,cloudflare.com
+DOMAIN-SUFFIX,cdnjs.cloudflare.com
+DOMAIN-SUFFIX,npmjs.org
+DOMAIN-SUFFIX,kali.download
+DOMAIN-SUFFIX,unpkg.com
+DOMAIN-SUFFIX,nodejs.org
+DOMAIN-SUFFIX,gitlab.com
