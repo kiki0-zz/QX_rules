@@ -1,0 +1,15 @@
+# NAME: Ping0 IP 纯净度检测（Kiki版）
+# AUTHOR: kiki0-zz
+# UPDATED: 2026-11-14
+# FORMAT: Loon Remote Rule (.list)
+# 在 Loon「远程规则」中订阅本文件，并将策略选择为已有的 ping0 策略组。
+# 请移除旧的手动规则：DOMAIN-SUFFIX,ping0.cc,ping0
+# 注意：下列 Cloudflare 验证域名由多个网站共用，将统一走 ping0 策略组。
+# 若其他网站的 CF 验证受到影响，可注释第二条后重新刷新订阅。
+# 规则仅负责流量分流；若源站、DNS 或出口 IP 本身异常，仍可能超时。
+
+# Ping0 主站（包括 www 及其他子域名）
+DOMAIN-SUFFIX,ping0.cc
+
+# Cloudflare Turnstile / Challenge 验证资源：尽量与 Ping0 使用同一出口
+DOMAIN,challenges.cloudflare.com
