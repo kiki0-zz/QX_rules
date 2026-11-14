@@ -1,0 +1,47 @@
+#!name=红果短剧去开屏广告
+#!desc=红果短剧开屏及常见插播广告拦截；穿山甲/Pangle 广告域与素材域；纯规则、无脚本、免 MitM。非百分百保证，按请求日志维护。
+#!author=kiki0-zz（整理自 Thelongdarkorg 与 HongGuo Lite）
+#!icon=https://raw.githubusercontent.com/Thelongdarkorg/loon-plugins/main/icons/hongguo.jpg
+#!tag=去广告
+#!system=ios
+#!date=2026-11-14
+
+# HongGuo / 红果短剧 | Loon 独立维护版
+# 维护仓库: https://github.com/kiki0-zz/QX_rules
+# 参考:
+#  https://github.com/Thelongdarkorg/loon-plugins/blob/main/hongguo_ad_block.plugin
+#  https://github.com/k6nfmm7dbr-commits/hongguo-lite/blob/main/loon/hongguo-lite.plugin
+#
+# 用法: 在 Loon「插件」中从 Raw 链接导入并启用，彻底退出红果后重启。
+# 本版只拦广告专用域名，不启用 MitM，也不依赖远程 JS。
+# 注意: 这是全局域名规则，其他使用同一广告 SDK 的 App 也可能受到影响。
+# 如遇正片黑屏/无法加载、金币激励广告不播放，请暂时关闭本插件排查。
+# 若开屏依然出现: 到 Loon 请求记录查看广告出现时的域名/命中策略，
+# 不要为追求去广告把整个 zijieapi.com / snssdk.com / byteimg.com 封掉。
+
+[Rule]
+# 1. 穿山甲 / Pangle 广告请求（包括备用域及相关子域）
+DOMAIN-KEYWORD,pangolin,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao-b.com,REJECT
+DOMAIN-SUFFIX,pglstatp-toutiao1.com,REJECT
+DOMAIN-SUFFIX,pangle.io,REJECT
+
+# 2. 字节广告素材与跳转（不阻断正片视频 CDN）
+DOMAIN-KEYWORD,-ad-sign.byteimg.com,REJECT
+DOMAIN,ad.toutiao.com,REJECT
+DOMAIN,zlink.ugsdk.cn,REJECT
+DOMAIN-KEYWORD,reading-ad,REJECT
+DOMAIN-KEYWORD,qznovelvod-ad,REJECT
+
+# 3. 字节广告专用 API 子域（精准匹配，不封主域）
+DOMAIN-REGEX,^ads[0-9]+-normal\\.zijieapi\\.com$,REJECT
+
+# ---- 可选诊断规则：默认关闭，确定需要后再逐条启用 ----
+# 某些开屏可能通过缓存、HTTPDNS、IP 直连或主 API 返回，
+# 本插件不保证彻底清除；建议先用 Loon 请求日志确认命中。
+# 字节自研 HTTPDNS（启用可能让抖音/番茄等请求变慢）：
+# DOMAIN-SUFFIX,dig.bdurl.net,REJECT
+# 字节小游戏（可能影响其他 App 的小游戏功能）：
+# DOMAIN-KEYWORD,minigame,REJECT
+# 注意: 不要启用 DOMAIN-SUFFIX,zijieapi.com / snssdk.com 的整域拒绝。
