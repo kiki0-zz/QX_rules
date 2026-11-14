@@ -9,6 +9,8 @@
 (function () {
   var params = (typeof $environment !== 'undefined' && $environment && $environment.params) || {};
   var node = typeof params.node === 'string' ? params.node.trim() : '';
+  // Newer Loon builds may expose the selected node name in nodeInfo.
+  if (!node && params.nodeInfo && typeof params.nodeInfo.name === 'string') node = params.nodeInfo.name.trim();
   var conf = (typeof $argument !== 'undefined' && $argument && typeof $argument === 'object') ? $argument : {};
   var done = false;
 
