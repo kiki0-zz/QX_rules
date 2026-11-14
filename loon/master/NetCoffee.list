@@ -1,13 +1,1 @@
-# NAME: Net.Coffee 检测站专用分流（Kiki版）
-# AUTHOR: kiki0-zz
-# UPDATED: 2026-11-14
-# FORMAT: Loon Remote Rule (.list)
-#
-# 只匹配 Net.Coffee 网站自身，不覆盖任何常用应用或检测目标域名。
-# 在 Loon「远程规则」中为本规则选择你的专用策略组/节点。
-#
-# 注意：Net.Coffee 网页可能请求其他网站来检查不同分流出口；
-# 这些跨站请求仍按你现有规则走，不能靠本列表强制全都使用同一个出口。
-# 不改主配置、主代理、其他分流或策略组。
-
 DOMAIN-SUFFIX,ip.net.coffee
