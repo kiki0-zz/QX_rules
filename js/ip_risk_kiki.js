@@ -212,15 +212,13 @@
       var pureScore=null, pureNote='数据源不可用';
       if(pure && pure.ip===ip){
         pureScore=score(pure.fraudScore);
-        pureNote=pureScore===null?'此接口没有返回有效风险分':'独立评分，仅代表 IPPure 的风险评估';
+        pureNote=pureScore===null?'暂无风险分':'本机构风险分';
       } else if(pure){
-        pureNote='检测到不同出口：'+pure.ip+'，不将其评分当作当前 IP 的结果';
+        pureNote='检测出口不一致';
       } else if(pr){
-        pureNote='查询失败：'+(pr.error||'响应无效');
+        pureNote='API 不可用';
       }
-      var pcNote=validP?
-        'proxycheck.io 官方评分，不能等同于所有平台的账号风控':
-        (p&&p.ok?'接口未提供有效评分': '查询失败：'+(p && p.error||'未知'));
+      var pcNote=validP?'本机构风险分':(p&&p.ok?'评分未返回':'API 不可用');
       var type=txt(net.type,txt(pure && pure.ip===ip && (pure.isResidential===true?'Residential':null),
         txt(g && g.is_datacenter===true?'Datacenter':null,'未知')));
       var country=txt(loc.country_name,txt(g && g.location && g.location.country,txt(w&&w.country)));
@@ -232,8 +230,6 @@
       var scamScore=s&&s.ok?score(sa.scamalytics_score):null;
       var q=outcomes.ipqs;
       var ipqsScore=q&&q.ok?score(q.data&&q.data.fraud_score):null;
-      var primaryScore=pcRisk!==null?'proxycheck.io':pureScore!==null?'IPPure':'暂无可靠评分';
-      var scoreValue=pcRisk!==null?pcRisk:pureScore;
       var badges=validP?
          pill('代理：'+flag(det.proxy),det.proxy)+pill('VPN：'+flag(det.vpn),det.vpn)+
          pill('机房：'+flag(det.hosting),det.hosting)+pill('Tor：'+flag(det.tor),det.tor):
@@ -248,6 +244,7 @@
       if(!geo.ok)debug.push('ipapi.is · '+geo.error);
       if(!who.ok)debug.push('ipwho.is · '+who.error);
       if(!pr.ok)debug.push('IPPure · '+pr.error);
+      if(pure&&pure.ip!==ip)debug.push('IPPure 返回 '+pure.ip+'，与检测目标 '+ip+' 不同，已排除评分');
       if(discovery.warning)debug.push(discovery.warning);
       var debugHtml=debug.length?debug.map(function(x){return '<div style="padding:4px 0;">'+htmlEsc(x)+'</div>';}).join(''):
         '<div>没有发现请求报错。</div>';
@@ -255,7 +252,7 @@
         '<div style="font-size:20px;font-weight:800;margin:3px 4px 5px;">节点风险检测 <span style="font-size:10px;font-weight:600;color:#8c93a1;">Kiki版 v1.2</span></div>'+
         '<div style="font-size:11px;color:#767d88;margin:0 4px 12px;">'+htmlEsc(node)+'</div>'+
         '<div style="background:#202c45;border-radius:17px;padding:15px 16px;margin-bottom:11px;color:#fff;">'+
-          '<div style="font-size:10px;color:#c2cbdb;">当前出口 IPv4</div>'+
+          '<div style="font-size:10px;color:#c2cbdb;">当前出口 '+(ip.indexOf(':') >= 0 ? 'IPv6' : 'IPv4')+'</div>'+
           '<div style="font-size:24px;letter-spacing:.4px;font-weight:800;margin:3px 0 7px;">'+hText(ip)+'</div>'+
           '<div style="font-size:12px;color:#cbd4e2;">'+hText(country)+' · '+hText(city)+'&nbsp;&nbsp; | &nbsp;&nbsp;'+hText(type)+'</div>'+
           '<div style="font-size:10px;color:#9eabc0;margin-top:9px;">IP 来源：'+hText(discovery.source)+'</div>'+
@@ -267,7 +264,7 @@
         '<div style="color:#767d87;font-size:11px;margin:0 3px 13px;">'+htmlEsc(cleanNote)+'</div>'+
         block('风险识别 · proxycheck.io',badges+
           '<div style="color:#737987;font-size:11px;margin-top:4px;">仅代表该数据库识别状态。Business/机房/住宅类型不等于风险评分。</div>')+
-        block('归属地与网络',item('IP 类型',type)+item('国家/城市',country+' · '+city)+
+        block('归属地与网络',item('IP 类型',type)+item('IPPure 住宅',pure&&pure.ip===ip?flag(pure.isResidential):'未确认')+item('国家/城市',country+' · '+city)+
           item('ASN',asn)+item('运营商',company))+
         details('更多数据源（Scamalytics / IPQS / ASN）',
           item('Scamalytics',!su||!sk?'未配置密钥':scamScore===null?'接口未提供分数 / 请求异常':scamScore+'/100')+
