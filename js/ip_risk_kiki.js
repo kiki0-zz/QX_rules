@@ -21,7 +21,10 @@
   }
   function request(method, url, timeout, headers, body) {
     return new Promise(function (resolve, reject) {
+      var hasSecrets = /[?&]key=/.test(url) || (headers && headers['IPQS-KEY']) ||
+        (typeof body === 'string' && /"key"\s*:/.test(body));
       var options = { url: url, node: node, timeout: timeout,
+        insecure: hasSecrets ? false : true,
         headers: headers || {
           Accept: 'application/json, text/plain, */*',
           'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'
