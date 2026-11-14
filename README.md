@@ -68,7 +68,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
-| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v1.7 风险分 / ASN / 运营商 / 单行风控状态 / 设备估算与独立 IPPure 评分；技术详情按需开启；免 MitM |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v0.1 风险分 / ASN / 运营商 / 单行风控状态 / 设备估算与独立 IPPure 评分；技术详情按需开启；免 MitM |
 
 示例远程插件地址：
 
@@ -80,7 +80,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 
 ### 节点 IP 风险检测（Kiki版）
 
-- 当前版本 v1.7：Loon 长按任一节点运行；[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[独立 JS 源码](js/ip_risk_kiki.js)。只在手动运行时请求，免 MitM、不修改主配置和分流。
+- 当前版本 v0.1：Loon 长按任一节点运行；[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[独立 JS 源码](js/ip_risk_kiki.js)。只在手动运行时请求，免 MitM、不修改主配置和分流。
 - 报告顺序借鉴常见 IP 查询站：出口 IPv4/IPv6 与英文城市级别地区 → proxycheck.io 独立风险分与简洁刻度 → IP 类型 / ASN / 运营商 → 四项代理识别单行短文本（不使用 Loon 会拆行的 HTML 表格） → **共享情况（设备估算）** → IPPure 独立评分。无法可靠对应的评分不会展示为该 IP 的评分。
 - **共享情况不是 Ping0 的“共享人数”。** 读取 proxycheck.io v3 的 `device_estimate.address` 和 `device_estimate.subnet`，它们估计同 IP 与同网段背后的设备数量，不等于独立用户数量，更不代表实时在线人数；缺失就明确提示；返回 0 时显示“暂无可靠估算（返回 0）”，不能据此判断无人共用。
 - Ping0 官方“共享人数”是其过去 12 个月监测所得的用户数量**区间估算**，目前没有可确认的公开查询 API，脚本不会伪造或爬虫猜测该指标。
