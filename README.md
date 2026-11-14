@@ -67,6 +67,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [AD_umetrip.plugin](loon/master/AD_umetrip.plugin) | 航旅纵横开屏广告处理 | 需要 MitM |
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
+| [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
 
 示例远程插件地址：
 
@@ -74,7 +75,9 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plugin
 ```
 
-将 `.list` 添加为 Loon 规则资源，将 `.plugin` 添加为 Loon 插件。带有 `[Rewrite]`、`[Script]` 或 `[MitM]` 段的插件，需要按 Loon 的证书和 MitM 配置完成授权；不需要的插件不要同时启用，避免规则和重写互相覆盖。
+将 `.list` 添加为 Loon 规则资源，将 `.plugin` 添加为 Loon 插件。
+
+**红果短剧维护说明：** 本插件基于 [Thelongdarkorg 的分档规则](https://github.com/Thelongdarkorg/loon-plugins/blob/main/hongguo_ad_block.plugin) 与 [HongGuo Lite](https://github.com/k6nfmm7dbr-commits/hongguo-lite) 整理，只启用较保守的广告专用域名匹配。若仍有开屏广告，先在 Loon 请求记录中核查是否命中 `REJECT`；不要盲目封锁 `zijieapi.com` / `snssdk.com` 主域。广告可能来自缓存、其他 SDK、HTTPDNS 或 IP 直连，不能保证完全移除。带有 `[Rewrite]`、`[Script]` 或 `[MitM]` 段的插件，需要按 Loon 的证书和 MitM 配置完成授权；不需要的插件不要同时启用，避免规则和重写互相覆盖。
 
 ## JavaScript 脚本
 
