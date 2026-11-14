@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v0.3 精简场景适配：TikTok / Google / AI 星级整齐排列，仅显示星星，不再显示冗长建议；节点风险、ASN、共享设备估算等功能不变。
+#!desc=v0.4 一体化 IP 报告：Net.Coffee 信任评分、出口归属地/ASN/运营商/状态、共享设备估算和 Claude/GPT/IP 详情入口；不再显示自算星级。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,13 +7,16 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具 v0.3。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v0.4。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
 # 默认使用适合 Loon 系统结果窗口的简短 HTML 速览。技术详情可在本机插件参数中开启。
 # 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
 # 双栈地址分别显示；东京特别区统一显示为 Tokyo（保留英文地名）。
 # 共享规模仅使用 proxycheck.io device_estimate 的设备估算（不是 Ping0 共享人数）；返回 0 不视为无人共享。
-# 独立使用官方 IPPure API（若其报告的出口 IP 与目标不一致，不采用风险分）。
+# Net.Coffee 指定 IP 查询来自第三方公开使用的接口，非稳定 API 承诺；只显示其真实信任分，失败不伪造。
+# 点击 Net.Coffee 指定 IP 详情可核对所选节点；Claude/GPT 页面仍遵循浏览器分流。
+# 不再显示 TikTok/Google/AI 自算星级；proxycheck 原始风险分仅作辅助参考。
+# IPPure 使用其公开接口，若报告的出口 IP 与目标不一致，不采用风险分。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
 # ipapi.is 匿名：每日 30 次 / 来源 IP，只有基础字段；注册免费账户可提高限额。
 # proxycheck.io 匿名：每日 100 次 / 来源 IP。
