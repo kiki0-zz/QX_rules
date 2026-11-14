@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v0.3
+ * 节点 IP 风险检测（Kiki版）v0.4
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -198,6 +198,10 @@
       jobs.push(p.then(function(v){outcomes[name]={ok:true,data:v};})
         .catch(function(e){outcomes[name]={ok:false,error:errorText(e)};}));
     }
+    // Net.Coffee's public-facing endpoint is used by third-party projects.
+    // It is NOT a documented, guaranteed stable API. Request exactly the
+    // selected node's IP and never substitute the current browser exit.
+    add('netcoffee',getJSON('https://ip.net.coffee/api/iprisk/'+encodeURIComponent(ip),11000));
     add('proxycheck',getJSON('https://proxycheck.io/v3/'+encodeURIComponent(ip),11000));
     var apiKey=getConfig('ipapi_key');
     if(apiKey){
@@ -222,6 +226,16 @@
     }
 
     Promise.all(jobs).then(function(){
+      var nr=outcomes.netcoffee;
+      var ncOuter=nr && nr.ok && nr.data && typeof nr.data==='object' ? nr.data : null;
+      var nc=ncOuter && ncOuter.data && typeof ncOuter.data==='object' ? ncOuter.data : ncOuter;
+      var ncReported=nc && typeof nc.ip==='string' ? nc.ip.trim() : '';
+      var ncSameIp=!ncReported || ncReported.toLowerCase()===ip.toLowerCase();
+      var ncOk=!!(nc && ncSameIp && nc.error!==true && nc.success!==false);
+      // Authoritative value is the upstream Net.Coffee trust_score;
+      // do not calculate it from proxycheck or borrow an unrelated score.
+      var ncTrust=ncOk?score(nc.trust_score!==undefined?nc.trust_score:nc.trustScore):null;
+      var detailUrl='https://ip.net.coffee/ip/'+encodeURIComponent(ip);
       var p=outcomes.proxycheck;
       var record=p && p.ok && p.data && p.data[ip] || {};
       var validP=!!(record.detections && (p.data.status==='ok' || p.data.status==='warning'));
@@ -254,41 +268,21 @@
       // Cloudflare's official Bot Management or WAF score.
       var ippureCfEstimate=pureUsable?score(pure.cloudflareCoefficient):null;
       var isV6=ip.indexOf(':')>=0;
-      var type=txt(net.type,txt(g && g.is_datacenter===true?'Datacenter':null,'未知'));
-      var country=txt(loc.country_name,txt(g&&g.location&&g.location.country,txt(w&&w.country)));
-      var rawCity=txt(loc.city_name,txt(g&&g.location&&g.location.city,txt(w&&w.city)));
+      var type=txt(net.type,txt(ncOk && nc.is_datacenter===true?'Hosting':null,
+        txt(g && g.is_datacenter===true?'Datacenter':null,'未知')));
+      var country=txt(loc.country_name,txt(ncOk&&nc.country,txt(g&&g.location&&g.location.country,txt(w&&w.country))));
+      var rawCity=txt(loc.city_name,txt(ncOk&&nc.city,txt(g&&g.location&&g.location.city,txt(w&&w.city))));
       var city=cityLevelEnglish(country, rawCity);
-      var asn=txt(net.asn,txt(g&&g.asn&&g.asn.asn,txt(w&&w.connection&&w.connection.asn)));
-      var provider=txt(net.provider,txt(g&&g.company&&g.company.name,txt(w&&w.connection&&w.connection.org)));
+      var asn=txt(net.asn,txt(ncOk&&nc.asn!==undefined?'AS'+String(nc.asn).replace(/^AS/i,''):null,
+        txt(g&&g.asn&&g.asn.asn,txt(w&&w.connection&&w.connection.asn))));
+      var provider=txt(net.provider,txt(ncOk&&nc.asOrganization,txt(g&&g.company&&g.company.name,txt(w&&w.connection&&w.connection.org))));
       var s=outcomes.scamalytics, so=s&&s.ok&&s.data&&s.data.scamalytics||{};
       var scamScore=s&&s.ok?score(so.scamalytics_score):null;
       var q=outcomes.ipqs, ipqsScore=q&&q.ok?score(q.data&&q.data.fraud_score):null;
       var showDetails=conf && (conf.show_details===true || conf.show_details==='true');
-      var scoreColor=pcRisk===null?'#697386':pcRisk<=25?'#17764a':pcRisk<=50?'#a76b0c':'#bf3e37';
-      var scoreText=pcRisk===null?'无有效评分':pcRisk+' / 100';
-      // Guidance maps to proxycheck.io's suggested "allow/challenge/deny" bands.
-      // It is not an access prediction for any specific platform.
-      var riskLabel=pcRisk===null?'无数据':pcRisk<=25?'低风险':pcRisk<=50?'建议验证':pcRisk<=75?'较高风险':'高风险';
-      // App suitability stars are Kiki's transparent IP-ONLY heuristics, not
-      // scores returned by Google, TikTok, OpenAI, Anthropic or Ping0.
-      // Basis: proxycheck.io's public risk bands, hosting, proxy/VPN and Tor flags.
-      // Never infer actual unlock, sign-in reliability, regional licensing,
-      // bandwidth, device fingerprint, account trust or user behavior.
-      var hasScore=pcRisk!==null && validP;
-      function starEstimate(kind) {
-        if(!hasScore)return null;
-        var value=pcRisk<=25?5:pcRisk<=50?4:pcRisk<=75?2:1;
-        if(det.hosting===true) value-=kind==='social'?2:kind==='ai'?1:0;
-        if(det.proxy===true || det.vpn===true) value-=1;
-        if(det.tor===true) value-=2;
-        if(net.type===undefined || net.type===null || net.type==='') value=Math.min(value,3);
-        return Math.max(1,Math.min(5,value));
-      }
-      var starSocial=starEstimate('social');
-      var starGoogle=starEstimate('general');
-      var starAI=starEstimate('ai');
-      // Keep platform suitability labels compact. Risk logic is unchanged.
-      function starText(n){return n===null?'—':'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);}
+      // Trust: bigger is better; risk: bigger is worse. Keep separate.
+      var trustColor=ncTrust===null?'#697386':ncTrust>=75?'#17764a':ncTrust>=50?'#a76b0c':'#bf3e37';
+      var trustText=ncTrust===null?'暂无评分':ncTrust+' / 100';
       var typemap={Hosting:'机房',Datacenter:'机房',Residential:'住宅',Business:'商业网络',Mobile:'移动网络'};
       var typeChinese=typemap[type]||type;
       if(typeChinese!==type)typeChinese+='（'+type+'）';
@@ -309,17 +303,20 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.3</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.4</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
       card.push('<div style="font-size:16px;color:#444f60;margin-bottom:11px;">'+hText(addressLine)+'</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:8px 0 10px;">');
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">风险 · proxycheck.io</div>');
-      card.push('<div style="font-size:31px;font-weight:800;color:'+scoreColor+';margin:2px 0 6px;">'+hText(scoreText)+
-        (riskLabel?' <span style="font-size:15px;font-weight:600;color:'+scoreColor+';">'+riskLabel+'</span>':'')+'</div>');
-      if(pcRisk!==null)card.push('<div style="height:5px;background:#e6e8ee;border-radius:4px;margin-bottom:9px;overflow:hidden;">'+
-        '<div style="height:5px;background:'+scoreColor+';width:'+Math.max(pcRisk,1)+'%;"></div></div>');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">Net.Coffee · 信任评分</div>');
+      card.push('<div style="font-size:31px;font-weight:800;color:'+trustColor+';margin:2px 0 6px;">'+hText(trustText)+'</div>');
+      if(ncTrust!==null){
+        card.push('<div style="height:5px;background:#e6e8ee;border-radius:4px;margin-bottom:9px;overflow:hidden;">'+
+          '<div style="height:5px;background:'+trustColor+';width:'+Math.max(ncTrust,1)+'%;"></div></div>');
+      }else{
+        card.push('<div style="font-size:12px;color:#777f8e;margin:0 0 9px;">接口暂未返回有效分数，可打开原站查看。</div>');
+      }
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin-top:9px;">网络信息</div>');
       card.push(line('IP 类型',typeChinese));
       card.push(line('ASN',asn));
@@ -336,17 +333,14 @@
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
-      // Small, stable inline rows for the native Loon popup. No grid/table.
-      // Fixed label width lines up the five-star fields without causing wraps.
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 7px;">场景适配 · IP 参考</div>');
-      function starLine(label,n){
-        return '<div style="white-space:nowrap;line-height:1.65;margin:2px 0;font-size:15px;">'+
-          '<span style="display:inline-block;width:86px;vertical-align:middle;color:#29354a;font-weight:600;">'+htmlEsc(label)+'</span>'+
-          '<span style="display:inline-block;vertical-align:middle;font-size:20px;letter-spacing:0;color:#b37a16;">'+starText(n)+'</span></div>';
-      }
-      card.push(starLine('TikTok',starSocial));
-      card.push(starLine('Google',starGoogle));
-      card.push(starLine('AI 模型',starAI));
+      // Raw proxycheck score stays optional background evidence, not the
+      // main score, and never feeds into Net.Coffee trust scoring.
+      if(pcRisk!==null)card.push('<div style="font-size:13px;color:#747e8c;margin-top:9px;">'+
+        'proxycheck 风险 '+pcRisk+'/100（辅助）</div>');
+      card.push('<div style="font-size:14px;line-height:1.7;margin:10px 0 4px;">'+
+        '<a href="'+htmlEsc(detailUrl)+'" style="color:#1769b4;text-decoration:none;">IP 详情 ›</a>　'+
+        '<a href="https://ip.net.coffee/claude/" style="color:#1769b4;text-decoration:none;">Claude ›</a>　'+
+        '<a href="https://ip.net.coffee/gpt/" style="color:#1769b4;text-decoration:none;">GPT ›</a></div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
@@ -379,6 +373,8 @@
         card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 10px;">');
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
         card.push(line('出口来源',discovery.source));
+        card.push(line('Net.Coffee 信任分',ncTrust!==null?ncTrust+'/100':'未获得有效数据'));
+        if(ncReported && !ncSameIp)card.push(line('Net.Coffee IP 校验','接口返回 '+ncReported+'，与当前出口不一致，已排除评分'));
         if(rawCity!==city)card.push(line('GeoIP 原始城市',rawCity+' → '+city));
         if(discovery.ipv6)card.push(line('附加 IPv6',discovery.ipv6));
         if(pure && pureVerifiedV6)card.push(line('IPPure IPv6','已通过其他出口探针核对：'+pure.ip));
@@ -394,7 +390,7 @@
         card.push(line('Ping0 共享人数','无可用公开 API，未接入'));
         if(discovery.warning)card.push(line('IP 探针',discovery.warning));
         var errors=discovery.failed.slice();
-        ['proxycheck','ipapi','ipwho','ippure','scamalytics','ipqs'].forEach(function(n){
+        ['netcoffee','proxycheck','ipapi','ipwho','ippure','scamalytics','ipqs'].forEach(function(n){
           if(outcomes[n] && !outcomes[n].ok)errors.push(n+': '+outcomes[n].error);
         });
         if(errors.length){
