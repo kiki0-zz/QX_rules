@@ -50,6 +50,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [Chatgpt.list](loon/master/Chatgpt.list) | ChatGPT / OpenAI 相关域名和网段 |
 | [Claude.list](loon/master/Claude.list) | Claude、Anthropic、Claude Code 相关域名 |
 | [Google.list](loon/master/Google.list) | Google 服务和相关资源 |
+| [NetCoffee.list](loon/master/NetCoffee.list) | Net.Coffee IP 检测（代替 Ping0），只匹配 `ip.net.coffee`；Loon 导入后手动选择策略 |
 | [Luokewangguo.list](loon/master/Luokewangguo.list) | 《洛克王国：世界》及腾讯服务、HTTPDNS |
 | [Pornhub.list](loon/master/Pornhub.list) | Pornhub、CDN 和页面依赖域名 |
 | [Qidian.list](loon/master/Qidian.list) | 起点读书放行规则和广告上报处理 |
@@ -68,7 +69,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
-| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v0.6 IP 风险/归属地/Net.Coffee 信任分 + 显式切换主代理打开 Claude/GPT + 一键恢复（选用时生效） |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v0.7 恢复原 v0.3 检测参数和简洁界面；不再接 Net.Coffee，也不切换策略 |
 
 示例远程插件地址：
 
@@ -78,19 +79,14 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 
 将 `.list` 添加为 Loon 规则资源，将 `.plugin` 添加为 Loon 插件。
 
-### 节点 IP 风险检测（Kiki版）v0.6
+### 节点 IP 风险检测（Kiki版）v0.7
 
-- 主插件：[IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin)（[Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)）。长按 Loon 节点执行「节点 IP 风险检测」，通过 `$httpClient` 的 `node` 参数把 IP 探针、Net.Coffee 尝试查询、其他风控查询绑定到长按选中的节点；**此普通检测绝不改变 Loon 的主代理策略**。脚本：[ip_risk_kiki.js](js/ip_risk_kiki.js)。
-- 原 IP 详情、ASN、运营商、出口地区、机房/代理/VPN/Tor 标记、Net.Coffee（或明确标注 PureIP 转发来源）信任评分、proxycheck.io 辅助风险分和设备估算均保留。不恢复自算的 TikTok / Google / AI 星级。
-- **重要的路由区别**：Loon Generic 脚本可以用 `$httpClient.get({url, node:'所选节点'})` 按节点发起单次请求；网页从 Safari 打开后会重新匹配 Loon 分流规则。仅打开 Claude/GPT 网站 **不会** 自动继承脚本选中的节点。
-- **v0.6 显式路由操作（可选）**：同一插件的菜单中增加「Net.Coffee · 切换主代理→Claude」「Net.Coffee · 切换主代理→GPT」，脚本使用 Loon 官方 `$config.setSelectPolicy('主代理', 所选节点)` 尝试切换名为 **主代理** 的 select 策略组，然后通过通知提供原站网址。**只在你主动选这些菜单项时切换策略**；切换会持续生效，会影响其他使用该策略组的流量，不会因关闭网页自动恢复。
-- **恢复操作**：「Net.Coffee · 恢复原主代理」尝试恢复打开网页前保存的选项。若主代理已被手工改成另一个值则拒绝覆盖，避免误操作。还原方法不需要修改主配置文件。实现见 [netcoffee_route_kiki.js](js/netcoffee_route_kiki.js)。
-- 如果「主代理」不在配置里、所选节点不属于该策略组，切换会失败且不会打开检测网页。另外，如果 Net.Coffee 相关域名被其他更优先的 Loon 规则分流到独立策略组，即便成功切换「主代理」，网站仍可能经由其他策略；**一定要核对网页显示的真实出口 IP**。当前操作不是临时独立浏览器代理、不保障每条线路均可绑定。
-- 「Net.Coffee · IP 详情」保留节点出口 IPv4 检测和快捷打开原站功能，但其专门 IP 详情 URL 的兼容性仍需在实际手机 Loon 环境确认；Claude/GPT 页面涉及 DNS、时区和设备指纹，无法只靠指定 IP 的网络查询模拟。
-- API 查询依次尝试 Net.Coffee 深度查询、旧查询及 PureIP 同源分数转发；无法获取时显示「暂无评分」和诊断，不会把 proxycheck 的基础 0/33 当作 Net.Coffee 信任分。公共第三方接口未获稳定性保证。
-- 其它说明：ipapi.is / ipwho.is 辅助归属地；IPPure 区分 IPv4 和 IPv6 出口，设备数估算不等于 Ping0 独立共享人数；可选 Scamalytics / IPQS Key 只填写在手机本地参数里。
-- 参考：[Loon Script API / setSelectPolicy / $httpClient.node](https://nsloon.app/docs/Script/script_api/)、[Loon 策略组](https://nsloon.app/docs/Policy/policygroup/)、[Net.Coffee 原站](https://ip.net.coffee/claude/)。
-- 旧的独立 [NetCoffee_Kiki.plugin](loon/master/NetCoffee_Kiki.plugin) 为早期版本快捷入口，可停用，无须与本插件一起安装。
+- **恢复原来稳定的 v0.3 功能、字段和展示方式，仅版本号更新为 v0.7**。主插件 [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin)（[Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)），脚本 [ip_risk_kiki.js](js/ip_risk_kiki.js)。Loon 节点列表长按具体节点检测，单次网络请求仍使用选中节点。
+- 保留：节点出口 IPv4/IPv6、英文城市（东京 23 特别区显示 Tokyo）、proxycheck.io 原始风险分、IP 类型、ASN、运营商、机房/代理/VPN/Tor 单行状态、同 IP/同网段设备估算、IPPure 独立评分、TikTok/Google/AI 三行**启发式参考星级**及可选的技术详情。星级只是 Kiki 对风险分及机房/代理标签的计算，不是平台官方评分，不代表实际解锁。
+- **移除 v0.4～v0.6 新增部分**：不再接入 Net.Coffee 信任分，不再包含网页快捷入口，也不会修改「主代理」或其它策略组。原来的 5 个 Generic 菜单入口收缩回仅 1 个「节点 IP 风险检测」。Scamalytics、IPQS、ipapi.is 等原有可选本地参数恢复为 v0.3 的内容。
+- 单独新增 [NetCoffee.list](loon/master/NetCoffee.list)（[Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/NetCoffee.list)），用于替代 [Ping0.list](loon/master/Ping0.list) 的检测站分流。只含 `DOMAIN-SUFFIX,ip.net.coffee`，覆盖 IP 查询、Claude / GPT 页面和同主机 API；Loon「远程规则」导入后**你自己选择策略组和节点**，规则文件不写死任何策略名。原 Ping0 规则文件保留，若不再使用，请在 Loon 停用/移除原有 Ping0 订阅。
+- **分流边界**：Net.Coffee 页面访问其自身域名时会命中 NetCoffee.list；若页面还请求 `claude.ai`、`chatgpt.com` 或其他外部检测域名，它们依旧由你已设置的 Claude/ChatGPT 等规则决定走哪个节点。若需要整份检测报告统一出口，应手动让相关策略选到同一节点，而非靠站点规则自动强制。
+- 以前单独创建的 [NetCoffee_Kiki.plugin](loon/master/NetCoffee_Kiki.plugin) 和相关网页跳转脚本现在不再推荐使用，保留历史文件但不会被新的主插件调用。
 
 **红果短剧维护说明：** 本插件基于 [Thelongdarkorg 的分档规则](https://github.com/Thelongdarkorg/loon-plugins/blob/main/hongguo_ad_block.plugin) 与 [HongGuo Lite](https://github.com/k6nfmm7dbr-commits/hongguo-lite) 整理，只启用较保守的广告专用域名匹配。若仍有开屏广告，先在 Loon 请求记录中核查是否命中 `REJECT`；不要盲目封锁 `zijieapi.com` / `snssdk.com` 主域。广告可能来自缓存、其他 SDK、HTTPDNS 或 IP 直连，不能保证完全移除。带有 `[Rewrite]`、`[Script]` 或 `[MitM]` 段的插件，需要按 Loon 的证书和 MitM 配置完成授权；不需要的插件不要同时启用，避免规则和重写互相覆盖。
 
