@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v0.6 网页按所选节点检测：新增明确操作的「切换主代理→Claude/GPT」与「恢复原主代理」，普通 IP 检测不改策略。Net.Coffee 信任分与 IP 信息保留。
+#!desc=v0.7 恢复经典节点 IP 风险报告：出口 IP、英文城市、ASN、运营商、proxycheck 风险分、设备估算、IPPure 与三行参考星级；移除 Net.Coffee 评分及所有网页跳转/切换策略入口。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,20 +7,13 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具 v0.6。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v0.7。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
 # 默认使用适合 Loon 系统结果窗口的简短 HTML 速览。技术详情可在本机插件参数中开启。
 # 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
 # 双栈地址分别显示；东京特别区统一显示为 Tokyo（保留英文地名）。
 # 共享规模仅使用 proxycheck.io device_estimate 的设备估算（不是 Ping0 共享人数）；返回 0 不视为无人共享。
-# 依次查询 /api/ip/lookup/{IP}、旧 /api/iprisk/{IP}；再不成功则尝试 PureIP 宣称原样转发的同源信任分（会标明 PureIP），均不是官方稳定 API。
-# 查询失败时显示接口诊断，不以 proxycheck 风险分推算 Net.Coffee 信任分。
-# Loon 弹窗 HTML 链接不能点击。IP 详情尝试以所选节点的 IPv4 查询，不切换策略。
-# Claude/GPT 网页实际走浏览器分流；仅手动运行「切换主代理→Claude/GPT」时尝试把「主代理」策略组切到所选节点。
-# 注意此操作会改变「主代理」的选择并持续生效！测试后请手动触发「恢复主代理」，或者在 Loon 自行切回。
-# 若节点不是「主代理」的可选成员、组名不对应或存在其它更优先的分流规则，不能保证网页走目标节点；务必核对网页实际出口。
-# 不再显示 TikTok/Google/AI 自算星级；proxycheck 原始风险分仅作辅助参考。
-# IPPure 使用其公开接口，若报告的出口 IP 与目标不一致，不采用风险分。
+# 独立使用官方 IPPure API（若其报告的出口 IP 与目标不一致，不采用风险分）。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
 # ipapi.is 匿名：每日 30 次 / 来源 IP，只有基础字段；注册免费账户可提高限额。
 # proxycheck.io 匿名：每日 100 次 / 来源 IP。
@@ -37,7 +30,3 @@ ipqs_key = input,"",type=string,tag=IPQualityScore API Key（可选）
 
 [Script]
 generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/ip_risk_kiki.js", {${show_details}, ${ipapi_key}, ${scamalytics_user}, ${scamalytics_region}, ${scamalytics_key}, ${ipqs_key}}) with tag="节点 IP 风险检测 · Kiki版", img_url="checkmark.shield.system", timeout=45
-generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_open_kiki.js", "ip") with tag="Net.Coffee · IP 详情 · Kiki版", img_url="safari.system", timeout=25
-generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_route_kiki.js", "claude") with tag="Net.Coffee · 切换主代理→Claude · Kiki版", img_url="safari.system", timeout=15
-generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_route_kiki.js", "gpt") with tag="Net.Coffee · 切换主代理→GPT · Kiki版", img_url="safari.system", timeout=15
-generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_route_kiki.js", "restore") with tag="Net.Coffee · 恢复原主代理 · Kiki版", img_url="arrow.uturn.backward.system", timeout=15
