@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v0.2
+ * 节点 IP 风险检测（Kiki版）v0.3
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -287,16 +287,8 @@
       var starSocial=starEstimate('social');
       var starGoogle=starEstimate('general');
       var starAI=starEstimate('ai');
-      function starText(n){return n===null?'未评估':'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);}
-      function starLabel(n){return n===null?'数据不足':n>=5?'IP 层较有利':n>=4?'较适合参考':n>=3?'需留意':n>=2?'谨慎使用':'建议优先换节点';}
-      var inputs=[];
-      if(hasScore) inputs.push('风险 '+pcRisk+'/100');
-      if(det.hosting===true)inputs.push('机房 IP');
-      if(det.proxy===true)inputs.push('代理标记');
-      if(det.vpn===true)inputs.push('VPN 标记');
-      if(det.tor===true)inputs.push('Tor 标记');
-      if(det.hosting===false && det.proxy===false && det.vpn===false && det.tor===false)inputs.push('未识别明显匿名代理标签');
-      var starReason=hasScore?inputs.join(' · '):'没有可核实的风险分，因此不生成星级';
+      // Keep platform suitability labels compact. Risk logic is unchanged.
+      function starText(n){return n===null?'—':'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);}
       var typemap={Hosting:'机房',Datacenter:'机房',Residential:'住宅',Business:'商业网络',Mobile:'移动网络'};
       var typeChinese=typemap[type]||type;
       if(typeChinese!==type)typeChinese+='（'+type+'）';
@@ -317,7 +309,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.2</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.3</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -344,22 +336,17 @@
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
-      // Keep the proven one-column Loon report. No flex/grid/table and no
-      // cross-platform HTTP probes; stars are local interpretation only.
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 6px;">场景适配参考 · IP 层估算</div>');
+      // Small, stable inline rows for the native Loon popup. No grid/table.
+      // Fixed label width lines up the five-star fields without causing wraps.
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 7px;">场景适配 · IP 参考</div>');
       function starLine(label,n){
-        return '<div style="font-size:14px;line-height:1.65;margin:2px 0;color:#29354a;">'+
-          '<b>'+htmlEsc(label)+'</b>　'+
-          '<span style="font-size:17px;letter-spacing:.2px;color:#ad7412;">'+starText(n)+'</span> '+
-          '<span style="font-size:12px;color:#687285;">'+(n===null?'':n+'/5 · ')+htmlEsc(starLabel(n))+'</span></div>';
+        return '<div style="white-space:nowrap;line-height:1.65;margin:2px 0;font-size:15px;">'+
+          '<span style="display:inline-block;width:86px;vertical-align:middle;color:#29354a;font-weight:600;">'+htmlEsc(label)+'</span>'+
+          '<span style="display:inline-block;vertical-align:middle;font-size:20px;letter-spacing:0;color:#b37a16;">'+starText(n)+'</span></div>';
       }
-      card.push(starLine('TikTok 运营',starSocial));
-      card.push(starLine('Google / YouTube',starGoogle));
-      card.push(starLine('AI 大模型',starAI));
-      card.push('<div style="font-size:12px;color:#697285;margin:0 0 5px;">AI 包括 ChatGPT / Gemini / Claude（同一通用规则）</div>');
-      card.push('<div style="font-size:13px;line-height:1.45;color:#5a6475;margin-top:4px;">判断依据：'+htmlEsc(starReason)+'</div>');
-      card.push('<div style="font-size:12px;line-height:1.45;color:#808795;margin-top:5px;">'+
-        '第三方风险数据 + Kiki 本地规则，不是平台官方评级；不判断地区支持、账号状态、视频速度或实际解锁。</div>');
+      card.push(starLine('TikTok',starSocial));
+      card.push(starLine('Google',starGoogle));
+      card.push(starLine('AI 模型',starAI));
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
@@ -387,8 +374,7 @@
       }
       if(scamScore!==null)card.push(line('Scamalytics',scamScore+' / 100（独立评分）'));
       if(ipqsScore!==null)card.push(line('IPQualityScore',ipqsScore+' / 100（独立评分）'));
-      card.push('<div style="font-size:13px;line-height:1.5;color:#7a8190;margin-top:11px;">'+
-        '各机构评分标准不同；设备估算不等于 Ping0 共享人数，也不保证平台解锁。</div>');
+
       if(showDetails){
         card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 10px;">');
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
