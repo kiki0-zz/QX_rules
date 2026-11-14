@@ -99,7 +99,9 @@ Twitter = select,视频优选,美国节点,日本节点,local节点,img-url = ht
 Chatgpt = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/chatgpt(white1).png
 Claude = select,美国节点,local节点,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/04ProxySoft/claude(1).png
 Speedtest = select,美国节点,视频优选,日本节点,狮城节点,DIRECT,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/03CNSoft/speedtest(2).png
-ping0 = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Cloudflare.png
+# Ping0 独立测试策略：保留原美国节点为默认；添加新加坡、主代理、DIRECT 方便定位节点/源站问题
+# 注意 DIRECT 只用于诊断，测得的是本地出口 IP，不能用于评价代理节点纯净度
+ping0 = select,美国节点,日本节点,狮城节点,local节点,主代理,DIRECT,img-url = https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Cloudflare.png
 movie = select,美国节点,日本节点,local节点,img-url = https://raw.githubusercontent.com/Orz-3/mini/master/Color/Bili.png
 Qidian = select,DIRECT,img-url = https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/03CNSoft/qidian.png
 海外服务 = select,全球节点,香港节点,台湾节点,美国节点,日本节点,狮城节点,img-url = https://github.com/Moli-X/Tool/raw/X/Icon/Flag/Pixel144/Macao.png
@@ -153,7 +155,12 @@ DOMAIN-SUFFIX,g2apay.com,DIRECT
 DOMAIN,hm.baidu.com,DIRECT
 DOMAIN,xs.gdt.qq.com,DIRECT
 DOMAIN,ii.gdt.qq.com,DIRECT
+# Ping0.cc 主站与子域名走同一个测试策略组
 DOMAIN-SUFFIX,ping0.cc,ping0
+# 如果 CF 验证始终循环，且请求日志确认 challenges.cloudflare.com 与 Ping0 主站走了不同出口，
+# 可临时启用下一行测试是否为出口不一致。该域名是 Cloudflare 公共验证服务，
+# 启用会影响其他网站的 CF 验证请求，测试完建议重新注释。
+# DOMAIN-SUFFIX,challenges.cloudflare.com,ping0
 DOMAIN,p14-buy.itunes.apple.com,海外服务
 # 使用代理兜底，不再将未命中流量强制发往日本
 GEOIP,CN,DIRECT
