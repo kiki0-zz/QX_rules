@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v0.5
+ * 节点 IP 风险检测（Kiki版）v0.6
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -350,7 +350,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.5</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.6</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -387,7 +387,7 @@
       if(pcRisk!==null)card.push('<div style="font-size:13px;color:#747e8c;margin-top:9px;">'+
         'proxycheck 风险 '+pcRisk+'/100（辅助）</div>');
       card.push('<div style="font-size:13px;color:#717b89;margin:10px 0 4px;">'+
-        '打开 Net.Coffee 网页：返回节点列表，长按节点选择 IP 详情 / Claude / GPT 快捷入口。</div>');
+        'IP 详情可以按选中节点查询；Claude/GPT 如需对应此节点，请使用「切换主代理→网页」操作，并在检测后恢复策略。</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
