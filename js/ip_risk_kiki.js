@@ -198,16 +198,21 @@
   function netCoffeeQuery(ip) {
     var endpoints=[
       'https://ip.net.coffee/api/ip/lookup/'+encodeURIComponent(ip),
-      'https://ip.net.coffee/api/iprisk/'+encodeURIComponent(ip)
+      'https://ip.net.coffee/api/iprisk/'+encodeURIComponent(ip),
+      // PureIP documents that it passes through Net.Coffee's upstream trust
+      // score unchanged; keep it clearly labeled as a THIRD-PARTY fallback.
+      'https://pureip.app/api/ip/health?ip='+encodeURIComponent(ip)
     ];
-    function unwrap(obj){
+    function unwrap(obj, index){
       if(!obj || typeof obj!=='object')return null;
       var candidates=[obj,obj.data,obj.result,obj.ip_info,
         obj.data&&obj.data.data,obj.data&&obj.data.result];
       for(var i=0;i<candidates.length;i++){
         var x=candidates[i];
         if(!x || typeof x!=='object' || Array.isArray(x))continue;
-        var n=score(x.trust_score!==undefined?x.trust_score:x.trustScore);
+        var n=score(x.trust_score!==undefined?x.trust_score:
+          x.trustScore!==undefined?x.trustScore:
+          index===2?x.score:null);
         if(n===null) continue;
         var supplied=String(x.ip||x.ip_address||x.query||obj.ip||'').trim();
         if(supplied && supplied.toLowerCase()!==ip.toLowerCase())
@@ -216,7 +221,7 @@
         Object.keys(x).forEach(function(k){record[k]=x[k];});
         record.trust_score=n;
         record.ip=ip;
-        record._endpoint=endpoints[i];
+        record._source=index===2?'PureIP':'Net.Coffee';
         return record;
       }
       return null;
@@ -226,11 +231,11 @@
       if(index>=endpoints.length)throw new Error(failures.join('；'));
       var url=endpoints[index];
       return getJSON(url,9000).then(function(obj){
-        var good=unwrap(obj);
+        var good=unwrap(obj,index);
         if(good){good._endpoint=url;return good;}
         throw new Error('JSON 未包含有效 trust_score');
       }).catch(function(err){
-        failures.push((index===0?'深度查询':'备用接口')+': '+errorText(err));
+        failures.push((index===0?'深度查询':index===1?'旧接口':'PureIP')+': '+errorText(err));
         return attempt(index+1);
       });
     }
@@ -351,8 +356,9 @@
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
       card.push('<div style="font-size:16px;color:#444f60;margin-bottom:11px;">'+hText(addressLine)+'</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:8px 0 10px;">');
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">Net.Coffee · 信任评分</div>');
-      card.push('<div style="font-size:31px;font-weight:800;color:'+trustColor+';margin:2px 0 6px;">'+hText(trustText)+'</div>');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">'+
+        (nc && nc._source==='PureIP'?'PureIP · 信任评分（Net.Coffee 上游）':'Net.Coffee · 信任评分')+'</div>');
+      card.push('<div style="font-size:'+(ncTrust===null?'18':'31')+'px;font-weight:800;color:'+trustColor+';margin:2px 0 6px;">'+hText(trustText)+'</div>');
       if(ncTrust!==null){
         card.push('<div style="height:5px;background:#e6e8ee;border-radius:4px;margin-bottom:9px;overflow:hidden;">'+
           '<div style="height:5px;background:'+trustColor+';width:'+Math.max(ncTrust,1)+'%;"></div></div>');
@@ -415,7 +421,7 @@
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
         card.push(line('出口来源',discovery.source));
         card.push(line('Net.Coffee 信任分',ncTrust!==null?ncTrust+'/100':'未获得有效数据'));
-        if(nc && nc._endpoint)card.push(line('Net.Coffee 来源',nc._endpoint));
+        if(nc && nc._endpoint)card.push(line('信任分数据源',nc._endpoint));
         if(ncError)card.push(line('Net.Coffee 接口诊断',ncError));
         if(ncReported && !ncSameIp)card.push(line('Net.Coffee IP 校验','接口返回 '+ncReported+'，与当前出口不一致，已排除评分'));
         if(rawCity!==city)card.push(line('GeoIP 原始城市',rawCity+' → '+city));
