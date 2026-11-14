@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=长按 Loon 节点检测真实出口 IP、proxycheck.io 风险分和 ipapi.is 基础信息；可在本机填写官方 API Key 增加 Scamalytics/IPQualityScore 评分。无需 MitM。
+#!desc=v1.1 多来源出口 IP 探测；查看 proxycheck.io 风险分和 ipapi.is 基础信息；可选本机填写 Scamalytics/IPQualityScore API Key。无需 MitM。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,8 +7,9 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v1.1.0。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
+# 若出现出口 IP 失败，会报告各个探测接口的状态/错误，便于针对性排查。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
 # ipapi.is 匿名：每日 30 次 / 来源 IP，只有基础字段；注册免费账户可提高限额。
 # proxycheck.io 匿名：每日 100 次 / 来源 IP。
