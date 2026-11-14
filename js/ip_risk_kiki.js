@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v1.6.0
+ * 节点 IP 风险检测（Kiki版）v1.7.0
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -287,7 +287,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.6</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.7</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -303,46 +303,41 @@
       card.push(line('ASN',asn));
       card.push(line('运营商',provider));
       if(validP){
-        // Use real table cells: no reliance on CSS grid/flex in Loon.
-        card.push('<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:9px;"><tr>'+
-          '<td width="25%" style="white-space:nowrap;text-align:left;">'+statusLine('机房',det.hosting)+'</td>'+
-          '<td width="25%" style="white-space:nowrap;text-align:center;">'+statusLine('代理',det.proxy)+'</td>'+
-          '<td width="25%" style="white-space:nowrap;text-align:center;">'+statusLine('VPN',det.vpn)+'</td>'+
-          '<td width="25%" style="white-space:nowrap;text-align:right;">'+statusLine('Tor',det.tor)+'</td>'+
-          '</tr></table>');
+        // Loon's HTML popup stacks table cells vertically. Use ONE inline
+        // text run in ONE block, not a table, flex/grid or separate rows.
+        card.push('<div style="margin-top:9px;font-size:13px;line-height:1.5;white-space:nowrap;color:#455262;">'+
+          '<span style="color:'+(det.hosting===true?'#b04a32':'#28734f')+';">机房 '+flag(det.hosting)+'</span>　'+
+          '<span style="color:'+(det.proxy===true?'#b04a32':'#28734f')+';">代理 '+flag(det.proxy)+'</span>　'+
+          '<span style="color:'+(det.vpn===true?'#b04a32':'#28734f')+';">VPN '+flag(det.vpn)+'</span>　'+
+          '<span style="color:'+(det.tor===true?'#b04a32':'#28734f')+';">Tor '+flag(det.tor)+'</span>'+
+          '</div>');
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
-        if(devicesIp!==null)card.push(line('单 IP 设备',devicesIp+' 台（估算）'));
-        if(devicesSubnet!==null)card.push(line('同网段设备',devicesSubnet+' 台（估算）'));
-        card.push('<div style="font-size:12px;color:#7a8190;line-height:1.45;margin-top:4px;">'+
-          '来源：proxycheck.io。设备数不等于共享人数或当前在线人数；估算为 0 也不代表无人共用。</div>');
+        // A zero device estimate is not evidence of zero people sharing the IP.
+        if(devicesIp!==null)card.push(line('同 IP 设备',devicesIp===0?'暂无可靠估算（返回 0）':devicesIp+' 台（估算）'));
+        if(devicesSubnet!==null)card.push(line('网段设备',devicesSubnet===0?'暂无可靠估算（返回 0）':devicesSubnet+' 台（估算）'));
+        card.push('<div style="font-size:12px;color:#7a8190;line-height:1.4;margin-top:3px;">'+
+          'proxycheck.io 估计值；不等于 Ping0 共享人数或在线人数。</div>');
       }else{
-        card.push('<div style="font-size:13px;color:#7a8190;">当前没有可用的设备估算。</div>');
+        card.push('<div style="font-size:13px;color:#7a8190;">暂未获得设备数量估算。</div>');
       }
       // Keep IPPure independent. A verified IPv6 score must never be labeled
       // as the risk score for the IPv4 in the header.
-      card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 9px;">');
-      card.push('<div style="font-size:16px;font-weight:700;color:#47566c;margin:0 0 4px;">IPPure · 独立数据源</div>');
-      if(pureUsable){
-        card.push('<div style="font-size:13px;color:#687285;margin-bottom:5px;">'+
-          (pureVerifiedV6?'IPv6 出口（与上方 IPv4 不同）':'与上方出口 IP 相同')+'</div>');
-        if(pureVerifiedV6)card.push('<div style="font-size:13px;color:#626a78;overflow-wrap:anywhere;margin-bottom:5px;">'+hText(pure.ip)+'</div>');
-        if(pureScore!==null)card.push(line('IPPure 系数',pureScore+'%（独立风险指标）'));
-        else card.push('<div style="font-size:14px;color:#7a8190;">IPPure 未返回有效系数</div>');
-        if(ippureCfEstimate!==null)card.push(line('CF 系数估算',ippureCfEstimate+'%（IPPure 自行估算）'));
-        if(pure.isDataCenter===true || pure.isDataCenter===false){
-          card.push(line('IPPure 类型',pure.isDataCenter?'机房':'非机房（该数据源判断）'));
-        } else if(pure.isResidential===true || pure.isResidential===false) {
-          card.push(line('IPPure 住宅',pure.isResidential?'是':'否'));
-        }
-      } else if(pure){
-        card.push('<div style="font-size:13px;color:#a16a25;">返回的出口 IP 与当前节点已核实的 IP 不符，评分暂不采用。</div>');
+      if(pureUsable && (pureScore!==null || ippureCfEstimate!==null)){
+        card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
+        card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin-bottom:3px;">IPPure · 独立指标</div>');
+        if(pureVerifiedV6)card.push('<div style="font-size:12px;color:#687285;margin-bottom:3px;">该结果对应已核实的 IPv6，不代表上方 IPv4。</div>');
+        if(pureScore!==null)card.push(line('IPPure 系数',pureScore+'%'));
+        if(ippureCfEstimate!==null)card.push(line('CF 系数估算',ippureCfEstimate+'%（非 CF 官方）'));
       } else {
-        card.push('<div style="font-size:13px;color:#7a8190;">暂未获得数据，无法显示 IPPure 评分。</div>');
+        // Show a single compact status rather than a large empty score panel.
+        card.push('<div style="font-size:13px;color:#808795;margin-top:9px;">'+
+          (pureVerifiedV6?'IPPure：已取得 IPv6，暂无有效评分':
+            pure?'IPPure：暂未取得对应出口的有效评分':'IPPure：接口暂不可用')+'</div>');
       }
       if(scamScore!==null)card.push(line('Scamalytics',scamScore+' / 100（独立评分）'));
       if(ipqsScore!==null)card.push(line('IPQualityScore',ipqsScore+' / 100（独立评分）'));
