@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v0.5 Net.Coffee 主评分新增深度查询和备用接口，接口失败显示原因；删除无效蓝色链接，长按节点新增 IP/Claude/GPT 三个真正可打开的通知入口。
+#!desc=v0.5 修复 Net.Coffee 评分：深度查询优先、旧接口及 PureIP 同源分转发备用；接口错误可见；IP/Claude/GPT 三个菜单入口用系统通知打开。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -13,7 +13,7 @@
 # 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
 # 双栈地址分别显示；东京特别区统一显示为 Tokyo（保留英文地名）。
 # 共享规模仅使用 proxycheck.io device_estimate 的设备估算（不是 Ping0 共享人数）；返回 0 不视为无人共享。
-# Net.Coffee 主查询路径为 /api/ip/lookup/{IP}，旧 /api/iprisk/{IP} 仅备用；两者均非保证稳定的官方 API。
+# 依次查询 /api/ip/lookup/{IP}、旧 /api/iprisk/{IP}；再不成功则尝试 PureIP 宣称原样转发的同源信任分（会标明 PureIP），均不是官方稳定 API。
 # 查询失败时显示接口诊断，不以 proxycheck 风险分推算 Net.Coffee 信任分。
 # Loon 的 HTML 弹窗链接不能点击。请长按节点选择下列 IP/Claude/GPT 网页快捷入口，点击通知跳转。
 # IP 详情会尝试带上当前选择节点的出口 IPv4；Claude/GPT 页面仍遵循浏览器分流。
