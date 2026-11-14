@@ -86,7 +86,10 @@
   var original=previous&&before===previous.changedTo?previous.original:before;
   if(before!==node){
     if(!setSelection(node) || selected()!==node){
-      finish('切换失败','节点「'+node+'」无法在「'+GROUP+'」中选中。可能不在该策略组的可选成员里；原选择为 '+before+'。');return;
+      // If the API accepted but policy verification differs, attempt to
+      // restore the original selection rather than leaving partial changes.
+      if(selected()!==before)setSelection(before);
+      finish('切换失败','节点「'+node+'」无法在「'+GROUP+'」中选中。可能不在该策略组的可选成员里；请核对当前选择（原选择：'+before+'）。');return;
     }
   }
   if(!storeBackup({group:GROUP,original:original,changedTo:node})){
