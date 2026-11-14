@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v0.1
+ * 节点 IP 风险检测（Kiki版）v0.2
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -266,7 +266,18 @@
       var showDetails=conf && (conf.show_details===true || conf.show_details==='true');
       var scoreColor=pcRisk===null?'#697386':pcRisk<=25?'#17764a':pcRisk<=50?'#a76b0c':'#bf3e37';
       var scoreText=pcRisk===null?'无有效评分':pcRisk+' / 100';
-      var riskLabel=pcRisk===null?'':pcRisk<=25?'较低':pcRisk<=50?'中等':'较高';
+      // Guidance maps to proxycheck.io's suggested "allow/challenge/deny" bands.
+      // It is not an access prediction for any specific platform.
+      var riskLabel=pcRisk===null?'无数据':pcRisk<=25?'低风险':pcRisk<=50?'建议验证':pcRisk<=75?'较高风险':'高风险';
+      var riskAdvice=pcRisk===null?'暂无有效风险分，不能判断平台使用情况。':
+        pcRisk<=25?'该数据库未发现明显高风险记录，可优先试用；是否支持特定平台仍需实际测试。':
+        pcRisk<=50?'部分网站可能增加验证码或登录验证，建议测试后再用于长期账号。':
+        pcRisk<=75?'严格风控网站可能要求更多验证，不建议作为重要账号的首选出口。':
+        '该数据库提示明显风险，建议优先考虑其他节点，尤其是重要账号登录或注册。';
+      var typeAdvice=(det.tor===true||det.proxy===true||det.vpn===true)?
+        '该数据源识别到代理／VPN／Tor 特征，可能增加部分平台验证。':
+        det.hosting===true?'这是机房 IP；低评分也不代表是住宅 IP。':
+        '';
       var typemap={Hosting:'机房',Datacenter:'机房',Residential:'住宅',Business:'商业网络',Mobile:'移动网络'};
       var typeChinese=typemap[type]||type;
       if(typeChinese!==type)typeChinese+='（'+type+'）';
@@ -287,7 +298,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.1</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.2</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -314,6 +325,12 @@
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 5px;">使用建议 · 风险参考</div>');
+      card.push('<div style="font-size:14px;line-height:1.5;color:#3d4b60;">'+htmlEsc(riskAdvice)+'</div>');
+      if(typeAdvice)card.push('<div style="font-size:13px;line-height:1.45;color:#687285;margin-top:5px;">'+htmlEsc(typeAdvice)+'</div>');
+      card.push('<div style="font-size:13px;line-height:1.5;color:#687285;margin-top:5px;">'+
+        'TikTok / Google / ChatGPT / Gemini / Claude：风险分不能判断解锁。'+
+        '请长按节点，选择「平台连通性检测 · Kiki版」实际验证。</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
