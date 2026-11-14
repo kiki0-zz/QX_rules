@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v1.3 一屏速览：风险分、IP类型、地区、ASN与运营商；异常和来源按需在本机开启详细信息。无需 MitM。
+#!desc=v1.6 手机友好 IP 风险报告：独立风险评分、网络归属、4 项状态一排、proxycheck.io 单 IP/网段设备估算及 IPPure 数据；免 MitM。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,11 +7,12 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具 v1.3.0。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v1.6.0。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
 # 默认使用适合 Loon 系统结果窗口的简短 HTML 速览。技术详情可在本机插件参数中开启。
 # 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
-# 单独列出 IPv6，不把双栈地址差异当作出口分流。
+# 双栈地址分别显示；东京特别区统一显示为 Tokyo（保留英文地名）。
+# 共享规模仅使用 proxycheck.io device_estimate 的设备估算（不是 Ping0 共享人数）。
 # 独立使用官方 IPPure API（若其报告的出口 IP 与目标不一致，不采用风险分）。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
 # ipapi.is 匿名：每日 30 次 / 来源 IP，只有基础字段；注册免费账户可提高限额。
