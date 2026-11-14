@@ -1,0 +1,26 @@
+#!name=节点 IP 风险检测（Kiki版）
+#!desc=长按 Loon 节点检测真实出口 IP、proxycheck.io 风险分和 ipapi.is 基础信息；可在本机填写官方 API Key 增加 Scamalytics/IPQualityScore 评分。无需 MitM。
+#!author=kiki0-zz
+#!tag=工具,IP检测
+#!system=iOS
+#!loon_version=3.5.1(983)
+#!date=2026-11-14
+#!homepage=https://github.com/kiki0-zz/QX_rules
+
+# Kiki 的节点风险检测工具。安装后在 Loon「节点」页面长按某个节点使用。
+# 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
+# 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
+# ipapi.is 匿名：每日 30 次 / 来源 IP，只有基础字段；注册免费账户可提高限额。
+# proxycheck.io 匿名：每日 100 次 / 来源 IP。
+# 可选 API Key 只填写到本机插件设置里，不要写进公开仓库、截图或分享的配置。
+# 注意：导出或分享含 API Key 的本地配置也可能泄露密钥。
+
+[Argument]
+ipapi_key = input,"",type=string,tag=ipapi.is API Key（可选）
+scamalytics_user = input,"",type=string,tag=Scamalytics 用户名（可选）
+scamalytics_region = select,"EU","US",type=string,tag=Scamalytics 注册区域
+scamalytics_key = input,"",type=string,tag=Scamalytics API Key（可选）
+ipqs_key = input,"",type=string,tag=IPQualityScore API Key（可选）
+
+[Script]
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/ip_risk_kiki.js", {${ipapi_key}, ${scamalytics_user}, ${scamalytics_region}, ${scamalytics_key}, ${ipqs_key}}) with tag="节点 IP 风险检测 · Kiki版", img_url="checkmark.shield.system", timeout=45
