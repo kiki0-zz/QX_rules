@@ -1,0 +1,37 @@
+#!name=叮咚买菜去广告 · Kiki 兼容版
+#!desc=优先保证买菜、折扣和优惠券正常使用；仅做保守广告字段净化，不拦截业务接口。
+#App链接=https://apps.apple.com/app/id768082524
+#!author=kiki0-zz（参考可莉、zirawell、奶思公开规则）
+#!tag=去广告
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DingdongMaicai.png
+#!homepage=https://github.com/kiki0-zz/QX_rules/blob/main/loon/master/Dingdong_Kiki.plugin
+#!loon_version=3.5.1(978)
+#!date=2026-11-14
+
+# Kiki Dingdong v1.0 | 稳定优先 / 保留折扣和促销功能 / 无远程 JS
+# 核心目标：降低旧版因 REJECT、整页清空、删购物入口而出现的网络未连接提示。
+# 关闭旧叮咚去广告插件后，再启用本插件；多个插件叠加无法判断是否有效。
+# 已知保留：会员折扣、优惠券/领券、限时折扣、促销商品、搜索热词、商品推荐、
+#           购物车、订单、我的页面全部入口、底部导航、AI 入口。
+# 不做：整域拦截、HTTPDNS 屏蔽、追踪/CDN 域名 REJECT、
+#       拦截 queryMyPage、homeFlowDetail、userLike、getRecommend、vipGuide。
+# 只保留两个小范围响应净化：
+#  - 首页悬浮广告位 data.suspension
+#  - 独立首页弹窗接口中常见的广告字段（不清空整个 data）
+# 两条规则不拦请求，不改服务器响应的 code / message / success 字段。
+# 如果广告很多：可根据 Loon 具体请求日志再逐项调整，避免误伤促销入口。
+#
+# 参考：
+# https://github.com/fkingikelee/fkikelee/blob/main/lpx/DingdongMaicai_remove_ads.lpx
+# https://github.com/fmz200/wool_scripts/blob/main/Loon/plugin/split/partD/DingDongMaiCai.lpx
+# https://github.com/zirawell/R-Store/blob/main/Res/Scripts/AntiAd/ddxq.js
+
+[Rewrite]
+# 首页浮层广告：只删悬浮位，不动商品、折扣、活动卡片。
+response if ${url} ~= /^https:\/\/maicai\.api\.ddxq\.mobi\/homeApi\/newDetails(?:[/?]|$)/i then response.json.delete("data.suspension")
+
+# 首页弹窗：仅清理确认名称的广告字段；保留响应结构与其他业务内容。
+response if ${url} ~= /^https:\/\/maicai\.api\.ddxq\.mobi\/homeApi\/getHomeAdPop(?:[/?]|$)/i then response.json.jq("if (.data | type) == \"object\" then .data |= del(.adInfo, .ad_info, .adPopup, .popupAdvert, .advertPopup, .suspension) else . end")
+
+[MitM]
+hostname = maicai.api.ddxq.mobi
