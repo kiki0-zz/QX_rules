@@ -68,7 +68,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
-| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v1.3 Loon 一屏风险速览，默认隐藏技术详情；proxycheck.io + IPPure 同出口独立评分；免 MitM |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v1.6 风险分 / ASN / 运营商 / 设备估算与独立 IPPure 评分；技术详情按需开启；免 MitM |
 
 示例远程插件地址：
 
@@ -80,14 +80,14 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 
 ### 节点 IP 风险检测（Kiki版）
 
-- 在 Loon 插件中添加上面的 Raw 链接并启用，然后到「所有节点」长按目标节点，选择「节点 IP 风险检测 · Kiki版」。
-- v1.2 使用 Cloudflare Trace、ident.me、ipify、IPinfo 多来源获取**实际出口 IP**：IPv4 / IPv6 分开处理，不再将两个协议族地址不同误报成线路分流；不改变分流、主配置或 DNS。
-- v1.3 默认使用精简 HTML 速览，重点显示出口 IP、风险分、IP 类型、ASN 和运营商；不再依赖在 Loon 中显示异常的 CSS 卡片、双栏和折叠标签。来源包括 [proxycheck.io v3](https://proxycheck.io/api/) 与 [IPPure API](https://ippure.com/MyIP-Info-API)，**两种评分不混算**；IPPure 的返回出口 IP 若不等于当前目标 IP，忽略其评分。ipapi.is、ipwho.is 用于交叉核对地理和网络资料，不冒充风险分。
-- 技术诊断、错误详情与另一个协议族的 IP 默认不展示。需要排障时，可在插件本机参数里打开「显示技术详情与接口错误」，不影响日常速览。若 IPPure 检测到另一种出口 IP，暂不显示其风险分，避免错误归因。
-- **可选**：在 Loon 的本机插件参数中设置 ipapi.is API Key、Scamalytics 用户名/注册区域/API Key、IPQualityScore API Key。用户不配置时会显示「未配置」，不会伪造其他机构的评分。匿名 ipapi.is 限额低且不提供 VPN/代理标签；有账号密钥才返回完整检测字段。
-- API Key 不写在公开仓库，但**包含密钥的本机配置若导出分享也可能泄露密钥**。Scamalytics API 按官方要求将密钥放在 HTTPS 查询参数中，仅在你本机通过节点调用。
-- 依赖第三方 API，可能因配额耗尽、地区限制、网络故障而显示失败。分数代表各机构风控判断，不是跨机构统一的「纯净度」，也不能证明某个 App 一定解锁。
-- 插件不含分流规则，不修改主配置、节点或 DNS。源码位于 `js/ip_risk_kiki.js`，后续可以直接在仓库维护。
+- 当前版本 v1.6：Loon 长按任一节点运行；[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[独立 JS 源码](js/ip_risk_kiki.js)。只在手动运行时请求，免 MitM、不修改主配置和分流。
+- 报告顺序借鉴常见 IP 查询站：出口 IPv4/IPv6 与英文城市级别地区 → proxycheck.io 独立风险分与简洁刻度 → IP 类型 / ASN / 运营商 → 四项代理识别单行表格 → **共享情况（设备估算）** → IPPure 独立评分。无法可靠对应的评分不会展示为该 IP 的评分。
+- **共享情况不是 Ping0 的“共享人数”。** 读取 proxycheck.io v3 的 `device_estimate.address` 和 `device_estimate.subnet`，它们估计同 IP 与同网段背后的设备数量，不等于独立用户数量，更不代表实时在线人数；缺失就明确写“当前没有可用的设备估算”，0 也不能证明无人共用。
+- Ping0 官方“共享人数”是其过去 12 个月监测所得的用户数量**区间估算**，目前没有可确认的公开查询 API，脚本不会伪造或爬虫猜测该指标。
+- 东京 23 特别区的英文地区（如 `Shibuya City`）按城市层级归一化为 `Tokyo`；原始 GeoIP 地名仍可在技术详情查看。其他城市不统一删去 `City` 后缀。
+- IPPure 如通过所选节点返回了已交叉验证的另一个协议族出口（例如 IPv6），独立标注该出口，不混入 IPv4 风险结论；“Cloudflare 系数”是 IPPure 自行估算，而非 Cloudflare 官方评分。
+- 想查看原始位置、估计置信度、接口报错和检测来源，可在 Loon 本机插件参数中开启“显示技术详情与接口错误”（默认关闭）。Scamalytics / IPQS 等可选 API Key 也只配置在本地；分享本地 Loon 配置前要删除密钥。
+- IP 风险评分由不同机构独立定义，不能加权合成“纯净度总分”，也不保证 ChatGPT、TikTok、Instagram 的真实可用性。
 
 **红果短剧维护说明：** 本插件基于 [Thelongdarkorg 的分档规则](https://github.com/Thelongdarkorg/loon-plugins/blob/main/hongguo_ad_block.plugin) 与 [HongGuo Lite](https://github.com/k6nfmm7dbr-commits/hongguo-lite) 整理，只启用较保守的广告专用域名匹配。若仍有开屏广告，先在 Loon 请求记录中核查是否命中 `REJECT`；不要盲目封锁 `zijieapi.com` / `snssdk.com` 主域。广告可能来自缓存、其他 SDK、HTTPDNS 或 IP 直连，不能保证完全移除。带有 `[Rewrite]`、`[Script]` 或 `[MitM]` 段的插件，需要按 Loon 的证书和 MitM 配置完成授权；不需要的插件不要同时启用，避免规则和重写互相覆盖。
 
