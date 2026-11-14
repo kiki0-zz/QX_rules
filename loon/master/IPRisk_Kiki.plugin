@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v1.2 卡片式风险报告：proxycheck.io 与 IPPure 独立评分，IPv4/IPv6 分离，折叠诊断信息；支持可选 Scamalytics/IPQS API Key。免 MitM。
+#!desc=v1.3 一屏速览：风险分、IP类型、地区、ASN与运营商；异常和来源按需在本机开启详细信息。无需 MitM。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,9 +7,10 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具 v1.2.0。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v1.3.0。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
-# 默认使用 Loon HTML 报告：主要评分卡片、基本属性和可展开诊断。
+# 默认使用适合 Loon 系统结果窗口的简短 HTML 速览。技术详情可在本机插件参数中开启。
+# 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
 # 单独列出 IPv6，不把双栈地址差异当作出口分流。
 # 独立使用官方 IPPure API（若其报告的出口 IP 与目标不一致，不采用风险分）。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
@@ -19,6 +20,7 @@
 # 注意：导出或分享含 API Key 的本地配置也可能泄露密钥。
 
 [Argument]
+show_details = switch,false,type=boolean,tag=显示技术详情与接口错误,desc=默认关闭以保持一屏可读；需要排查时再打开
 ipapi_key = input,"",type=string,tag=ipapi.is API Key（可选）
 scamalytics_user = input,"",type=string,tag=Scamalytics 用户名（可选）
 scamalytics_region = select,"EU","US",type=string,tag=Scamalytics 注册区域
@@ -26,4 +28,4 @@ scamalytics_key = input,"",type=string,tag=Scamalytics API Key（可选）
 ipqs_key = input,"",type=string,tag=IPQualityScore API Key（可选）
 
 [Script]
-generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/ip_risk_kiki.js", {${ipapi_key}, ${scamalytics_user}, ${scamalytics_region}, ${scamalytics_key}, ${ipqs_key}}) with tag="节点 IP 风险检测 · Kiki版", img_url="checkmark.shield.system", timeout=45
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/ip_risk_kiki.js", {${show_details}, ${ipapi_key}, ${scamalytics_user}, ${scamalytics_region}, ${scamalytics_key}, ${ipqs_key}}) with tag="节点 IP 风险检测 · Kiki版", img_url="checkmark.shield.system", timeout=45
