@@ -78,6 +78,13 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 
 将 `.list` 添加为 Loon 规则资源，将 `.plugin` 添加为 Loon 插件。
 
+### Net.Coffee 快捷检测（Kiki版）
+
+- 新增独立 [NetCoffee_Kiki.plugin](loon/master/NetCoffee_Kiki.plugin)（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/NetCoffee_Kiki.plugin)）、[对应 JS 脚本](js/netcoffee_kiki.js)，v0.1。
+- 在 Loon 节点列表长按具体节点，点击「Net.Coffee 快捷检测 · Kiki版」，插件会尝试通过该节点取得出口 IPv4，并显示原站三个入口：Claude 检测（https://ip.net.coffee/claude/）、GPT 检测（https://ip.net.coffee/gpt/）、IP 评分查询（https://ip.net.coffee/ip/）。
+- **路由边界：** Loon 脚本内的请求绑定所选节点；随后点击网页时，Safari/浏览器遵循当前 Loon 分流策略，**不会自动切到所选节点**。必须对比脚本显示的出口 IP 与网站显示的 IP，不能直接认为网站结果对应长按节点。插件不修改主策略组、全局模式和规则。
+- Loon Generic HTML 弹窗里的超链接因客户端版本可能不能跳转，另有官方文档支持的系统通知备用：点击「Net.Coffee · Claude 检测」通知打开官网。无需 API Key，不拉取或复制 Net.Coffee 的评分算法，不修改 DNS/MitM 配置。
+
 ### 节点 IP 风险检测（Kiki版）
 
 - 当前版本 **v0.3**：在 Loon 中长按任意节点，选择「节点 IP 风险检测 · Kiki版」。[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[源码](js/ip_risk_kiki.js)。不会更改主配置、分流或 DNS，不依赖 MitM。
