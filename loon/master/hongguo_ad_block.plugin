@@ -34,8 +34,17 @@ DOMAIN,zlink.ugsdk.cn,REJECT
 DOMAIN-KEYWORD,reading-ad,REJECT
 DOMAIN-KEYWORD,qznovelvod-ad,REJECT
 
-# 3. 字节广告专用 API 子域（精准匹配，不封主域）
-DOMAIN-REGEX,^ads[0-9]+-normal\\.zijieapi\\.com$,REJECT
+# 3. 字节广告 API 子域关键词（按 ads0~ads9-normal 命名，不封主域）
+DOMAIN-KEYWORD,ads0-normal,REJECT
+DOMAIN-KEYWORD,ads1-normal,REJECT
+DOMAIN-KEYWORD,ads2-normal,REJECT
+DOMAIN-KEYWORD,ads3-normal,REJECT
+DOMAIN-KEYWORD,ads4-normal,REJECT
+DOMAIN-KEYWORD,ads5-normal,REJECT
+DOMAIN-KEYWORD,ads6-normal,REJECT
+DOMAIN-KEYWORD,ads7-normal,REJECT
+DOMAIN-KEYWORD,ads8-normal,REJECT
+DOMAIN-KEYWORD,ads9-normal,REJECT
 
 # ---- 可选诊断规则：默认关闭，确定需要后再逐条启用 ----
 # 某些开屏可能通过缓存、HTTPDNS、IP 直连或主 API 返回，
