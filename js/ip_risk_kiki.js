@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v0.4
+ * 节点 IP 风险检测（Kiki版）v0.5
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -192,16 +192,60 @@
     return city;
   }
 
+  // The /api/ip/lookup/:ip route has been used by a documented third-party
+  // caller. The older /api/iprisk/:ip route is retained only as fallback.
+  // Both are unofficial, so always validate the actual score and target IP.
+  function netCoffeeQuery(ip) {
+    var endpoints=[
+      'https://ip.net.coffee/api/ip/lookup/'+encodeURIComponent(ip),
+      'https://ip.net.coffee/api/iprisk/'+encodeURIComponent(ip)
+    ];
+    function unwrap(obj){
+      if(!obj || typeof obj!=='object')return null;
+      var candidates=[obj,obj.data,obj.result,obj.ip_info,
+        obj.data&&obj.data.data,obj.data&&obj.data.result];
+      for(var i=0;i<candidates.length;i++){
+        var x=candidates[i];
+        if(!x || typeof x!=='object' || Array.isArray(x))continue;
+        var n=score(x.trust_score!==undefined?x.trust_score:x.trustScore);
+        if(n===null) continue;
+        var supplied=String(x.ip||x.ip_address||x.query||obj.ip||'').trim();
+        if(supplied && supplied.toLowerCase()!==ip.toLowerCase())
+          throw new Error('接口返回的 IP 不一致（'+supplied+'）');
+        var record={};
+        Object.keys(x).forEach(function(k){record[k]=x[k];});
+        record.trust_score=n;
+        record.ip=ip;
+        record._endpoint=endpoints[i];
+        return record;
+      }
+      return null;
+    }
+    var failures=[];
+    function attempt(index){
+      if(index>=endpoints.length)throw new Error(failures.join('；'));
+      var url=endpoints[index];
+      return getJSON(url,9000).then(function(obj){
+        var good=unwrap(obj);
+        if(good){good._endpoint=url;return good;}
+        throw new Error('JSON 未包含有效 trust_score');
+      }).catch(function(err){
+        failures.push((index===0?'深度查询':'备用接口')+': '+errorText(err));
+        return attempt(index+1);
+      });
+    }
+    return attempt(0);
+  }
+
   function examine(discovery) {
     var ip=discovery.ip, outcomes={}, jobs=[];
     function add(name,p){
       jobs.push(p.then(function(v){outcomes[name]={ok:true,data:v};})
         .catch(function(e){outcomes[name]={ok:false,error:errorText(e)};}));
     }
-    // Net.Coffee's public-facing endpoint is used by third-party projects.
-    // It is NOT a documented, guaranteed stable API. Request exactly the
-    // selected node's IP and never substitute the current browser exit.
-    add('netcoffee',getJSON('https://ip.net.coffee/api/iprisk/'+encodeURIComponent(ip),11000));
+    // Prefer Net.Coffee's IP lookup route; fall back to its older risk route.
+    // Both are undocumented, so failure must be visible and never fabricated.
+    add('netcoffee',netCoffeeQuery(ip));
     add('proxycheck',getJSON('https://proxycheck.io/v3/'+encodeURIComponent(ip),11000));
     var apiKey=getConfig('ipapi_key');
     if(apiKey){
@@ -227,14 +271,12 @@
 
     Promise.all(jobs).then(function(){
       var nr=outcomes.netcoffee;
-      var ncOuter=nr && nr.ok && nr.data && typeof nr.data==='object' ? nr.data : null;
-      var nc=ncOuter && ncOuter.data && typeof ncOuter.data==='object' ? ncOuter.data : ncOuter;
+      var nc=nr && nr.ok && nr.data && typeof nr.data==='object' ? nr.data : null;
       var ncReported=nc && typeof nc.ip==='string' ? nc.ip.trim() : '';
-      var ncSameIp=!ncReported || ncReported.toLowerCase()===ip.toLowerCase();
-      var ncOk=!!(nc && ncSameIp && nc.error!==true && nc.success!==false);
-      // Authoritative value is the upstream Net.Coffee trust_score;
-      // do not calculate it from proxycheck or borrow an unrelated score.
-      var ncTrust=ncOk?score(nc.trust_score!==undefined?nc.trust_score:nc.trustScore):null;
+      var ncSameIp=!!(nc && ncReported.toLowerCase()===ip.toLowerCase());
+      var ncOk=!!(nc && ncSameIp);
+      var ncTrust=ncOk?score(nc.trust_score):null;
+      var ncError=nr&&!nr.ok?nr.error:'';
       var detailUrl='https://ip.net.coffee/ip/'+encodeURIComponent(ip);
       var p=outcomes.proxycheck;
       var record=p && p.ok && p.data && p.data[ip] || {};
@@ -303,7 +345,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.4</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v0.5</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -315,7 +357,8 @@
         card.push('<div style="height:5px;background:#e6e8ee;border-radius:4px;margin-bottom:9px;overflow:hidden;">'+
           '<div style="height:5px;background:'+trustColor+';width:'+Math.max(ncTrust,1)+'%;"></div></div>');
       }else{
-        card.push('<div style="font-size:12px;color:#777f8e;margin:0 0 9px;">接口暂未返回有效分数，可打开原站查看。</div>');
+        card.push('<div style="font-size:12px;color:#777f8e;margin:0 0 9px;">'+
+          htmlEsc(ncError?('接口异常：'+ncError.slice(0,130)):'接口未提供可信评分')+'</div>');
       }
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin-top:9px;">网络信息</div>');
       card.push(line('IP 类型',typeChinese));
@@ -337,10 +380,8 @@
       // main score, and never feeds into Net.Coffee trust scoring.
       if(pcRisk!==null)card.push('<div style="font-size:13px;color:#747e8c;margin-top:9px;">'+
         'proxycheck 风险 '+pcRisk+'/100（辅助）</div>');
-      card.push('<div style="font-size:14px;line-height:1.7;margin:10px 0 4px;">'+
-        '<a href="'+htmlEsc(detailUrl)+'" style="color:#1769b4;text-decoration:none;">IP 详情 ›</a>　'+
-        '<a href="https://ip.net.coffee/claude/" style="color:#1769b4;text-decoration:none;">Claude ›</a>　'+
-        '<a href="https://ip.net.coffee/gpt/" style="color:#1769b4;text-decoration:none;">GPT ›</a></div>');
+      card.push('<div style="font-size:13px;color:#717b89;margin:10px 0 4px;">'+
+        '打开 Net.Coffee 网页：返回节点列表，长按节点选择 IP 详情 / Claude / GPT 快捷入口。</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
@@ -374,6 +415,8 @@
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
         card.push(line('出口来源',discovery.source));
         card.push(line('Net.Coffee 信任分',ncTrust!==null?ncTrust+'/100':'未获得有效数据'));
+        if(nc && nc._endpoint)card.push(line('Net.Coffee 来源',nc._endpoint));
+        if(ncError)card.push(line('Net.Coffee 接口诊断',ncError));
         if(ncReported && !ncSameIp)card.push(line('Net.Coffee IP 校验','接口返回 '+ncReported+'，与当前出口不一致，已排除评分'));
         if(rawCity!==city)card.push(line('GeoIP 原始城市',rawCity+' → '+city));
         if(discovery.ipv6)card.push(line('附加 IPv6',discovery.ipv6));
