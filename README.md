@@ -68,6 +68,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | 长按节点运行、无需 MitM；Loon 3.5.1(983)+，可选本机配置 API Key |
 
 示例远程插件地址：
 
@@ -76,6 +77,15 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 ```
 
 将 `.list` 添加为 Loon 规则资源，将 `.plugin` 添加为 Loon 插件。
+
+### 节点 IP 风险检测（Kiki版）
+
+- 在 Loon 插件中添加上面的 Raw 链接并启用，然后到「所有节点」长按目标节点，选择「节点 IP 风险检测 · Kiki版」。
+- 默认通过所选节点请求 ipify 取得**实际出口 IP**，然后通过同一个节点调用 [proxycheck.io v3](https://proxycheck.io/api/)（实际风险分、代理/VPN/机房识别）及 [ipapi.is](https://ipapi.is/developers.html)（匿名基础归属地/ASN）。
+- **可选**：在 Loon 的本机插件参数中设置 ipapi.is API Key、Scamalytics 用户名/注册区域/API Key、IPQualityScore API Key。用户不配置时会显示「未配置」，不会伪造其他机构的评分。匿名 ipapi.is 限额低且不提供 VPN/代理标签；有账号密钥才返回完整检测字段。
+- API Key 不写在公开仓库，但**包含密钥的本机配置若导出分享也可能泄露密钥**。Scamalytics API 按官方要求将密钥放在 HTTPS 查询参数中，仅在你本机通过节点调用。
+- 依赖第三方 API，可能因配额耗尽、地区限制、网络故障而显示失败。分数代表各机构风控判断，不是跨机构统一的「纯净度」，也不能证明某个 App 一定解锁。
+- 插件不含分流规则，不修改主配置、节点或 DNS。源码位于 `js/ip_risk_kiki.js`，后续可以直接在仓库维护。
 
 **红果短剧维护说明：** 本插件基于 [Thelongdarkorg 的分档规则](https://github.com/Thelongdarkorg/loon-plugins/blob/main/hongguo_ad_block.plugin) 与 [HongGuo Lite](https://github.com/k6nfmm7dbr-commits/hongguo-lite) 整理，只启用较保守的广告专用域名匹配。若仍有开屏广告，先在 Loon 请求记录中核查是否命中 `REJECT`；不要盲目封锁 `zijieapi.com` / `snssdk.com` 主域。广告可能来自缓存、其他 SDK、HTTPDNS 或 IP 直连，不能保证完全移除。带有 `[Rewrite]`、`[Script]` 或 `[MitM]` 段的插件，需要按 Loon 的证书和 MitM 配置完成授权；不需要的插件不要同时启用，避免规则和重写互相覆盖。
 
