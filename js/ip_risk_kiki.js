@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v1.0.0
+ * 节点 IP 风险检测（Kiki版）v1.1.0
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -21,15 +21,21 @@
   }
   function request(method, url, timeout, headers, body) {
     return new Promise(function (resolve, reject) {
-      var options = { url: url, node: node, timeout: timeout, insecure: false,
-        headers: headers || { Accept: 'application/json' } };
+      var options = { url: url, node: node, timeout: timeout,
+        headers: headers || {
+          Accept: 'application/json, text/plain, */*',
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'
+        } };
+      // Node targeting follows the official Loon $httpClient option: "node".
+      // Do not silently fall back to DIRECT or the global proxy during discovery.
       if (body !== undefined) options.body = body;
       try {
         $httpClient[method](options, function (error, response, text) {
-          if (error) return reject(new Error(String(error).slice(0, 140)));
-          var status = Number(response && response.status);
-          if (status < 200 || status >= 300) return reject(new Error('HTTP ' + (status || '?')));
-          resolve(text);
+          if (error) return reject(new Error(String(error).slice(0, 150)));
+          var status = Number(response && (response.status || response.statusCode));
+          if (!Number.isFinite(status) || status < 200 || status >= 300)
+            return reject(new Error('HTTP ' + (status || '?')));
+          resolve(String(text === undefined || text === null ? '' : text));
         });
       } catch (e) { reject(e); }
     });
@@ -63,21 +69,67 @@
     return ip.indexOf(':') !== -1 && /^[0-9a-fA-F:]{2,39}$/.test(ip);
   }
   function exitIP() {
-    var endpoints = [
-      'https://api.ipify.org?format=json',
-      'https://api4.ipify.org?format=json'
+    // Independent sources. Both ipify hosts were a single point of failure in v1.0.
+    // Every discovery request MUST use the selected node, not the active global route.
+    var primary = [
+      { name: 'Cloudflare Trace', url: 'https://www.cloudflare.com/cdn-cgi/trace', kind: 'trace' },
+      { name: 'ident.me', url: 'https://v4.ident.me/', kind: 'text' },
+      { name: 'ipify IPv4', url: 'https://api4.ipify.org?format=json', kind: 'json' },
+      { name: 'ipinfo.io', url: 'https://ipinfo.io/json', kind: 'json' }
     ];
-    function next(i) {
-      if (i === endpoints.length) return Promise.reject(new Error('两个出口 IP 接口均无法通过指定节点访问'));
-      return getJSON(endpoints[i], 9000).then(function (r) {
-        var ip = r && r.ip;
-        if (!validIP(ip)) throw new Error('出口 IP 格式异常');
-        return ip;
-      }).catch(function () { return next(i + 1); });
+    var backup = [
+      { name: 'ipapi.is', url: 'https://api.ipapi.is/', kind: 'json' },
+      { name: 'ip.sb', url: 'https://api.ip.sb/ip', kind: 'text' }
+    ];
+    var problems = [];
+    function probe(p) {
+      return request('get', p.url, 9000).then(function (raw) {
+        var ip = '';
+        if (p.kind === 'trace') {
+          var match = raw.match(/(?:^|\n)ip=([^\r\n]+)/);
+          ip = match ? match[1].trim() : '';
+        } else if (p.kind === 'json') {
+          var data;
+          try { data = JSON.parse(raw); } catch (e) { throw new Error('返回不是 JSON'); }
+          ip = String(data && (data.ip || data.query) || '').trim();
+        } else {
+          ip = String(raw || '').trim();
+        }
+        if (!validIP(ip)) throw new Error('未返回有效 IP');
+        return { name: p.name, ip: ip };
+      }).catch(function (e) {
+        var msg = p.name + '：' + errorText(e);
+        problems.push(msg);
+        console.log('[Kiki IP Risk] ' + msg);
+        return null;
+      });
     }
-    return next(0);
+    function summarize(good) {
+      var counts = {};
+      good.forEach(function (r) { counts[r.ip] = (counts[r.ip] || 0) + 1; });
+      var ips = Object.keys(counts).sort(function (a,b) { return counts[b] - counts[a]; });
+      if (ips.length > 1 && counts[ips[0]] === counts[ips[1]]) {
+        throw new Error('出口 IP 不一致，无法可靠选定：' +
+          good.map(function (x) { return x.name + '=' + x.ip; }).join('，'));
+      }
+      return { ip: ips[0], source: good.filter(function (x) { return x.ip === ips[0]; })
+        .map(function (x) { return x.name; }).join('、'),
+        warning: ips.length > 1 ? '不同目标出现多个出口 IP，请注意线路存在分流：' +
+          good.map(function(x){return x.name + '=' + x.ip;}).join('，') : '',
+        failed: problems };
+    }
+    return Promise.all(primary.map(probe)).then(function (results) {
+      var good = results.filter(Boolean);
+      if (good.length) return summarize(good);
+      return Promise.all(backup.map(probe)).then(function (fallback) {
+        var available = fallback.filter(Boolean);
+        if (available.length) return summarize(available);
+        throw new Error('所有出口探测接口均失败：\n' + problems.join('\n'));
+      });
+    });
   }
-  function examine(ip) {
+  function examine(discovery) {
+    var ip = discovery.ip;
     var jobs = [];
     var outcomes = {};
     function push(key, promise) {
@@ -120,6 +172,8 @@
       var l = [];
       l.push('检测节点：' + node);
       l.push('出口 IP：' + ip);
+      l.push('出口来源：' + discovery.source);
+      if (discovery.warning) l.push('⚠️ ' + discovery.warning);
       l.push('');
       l.push('【风险评分｜0 低风险 → 100 高风险】');
       var p = outcomes.proxycheck;
@@ -207,6 +261,9 @@
     return;
   }
   exitIP().then(examine).catch(function (e) {
-    finish('Kiki版 · 检测失败', '节点：' + node + '\n无法获得该节点的真实出口 IP：' + errorText(e) + '\n请确认节点本身可以访问 HTTPS。');
+    var detail = String(e && e.message || e);
+    finish('Kiki版 · 出口探测失败',
+      '节点：' + node + '\n' + detail.slice(0, 950) +
+      '\n请到 Loon 请求记录核对上述探测域名是否被 REJECT 或解析失败。');
   });
 })();
