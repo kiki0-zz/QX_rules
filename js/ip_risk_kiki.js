@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v1.2.0
+ * 节点 IP 风险检测（Kiki版）v1.3.0
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -170,18 +170,19 @@
 
   function examine(discovery) {
     var ip=discovery.ip, outcomes={}, jobs=[];
-    function add(name,p) {
+    function add(name,p){
       jobs.push(p.then(function(v){outcomes[name]={ok:true,data:v};})
         .catch(function(e){outcomes[name]={ok:false,error:errorText(e)};}));
     }
     add('proxycheck',getJSON('https://proxycheck.io/v3/'+encodeURIComponent(ip),11000));
     var apiKey=getConfig('ipapi_key');
-    if(apiKey) add('ipapi',request('post','https://api.ipapi.is/',11000,
-      {'Content-Type':'application/json',Accept:'application/json'},
-      JSON.stringify({q:ip,key:apiKey})).then(function(x){return JSON.parse(x);}));
-    else add('ipapi',getJSON('https://api.ipapi.is/?q='+encodeURIComponent(ip),11000));
+    if(apiKey){
+      add('ipapi',request('post','https://api.ipapi.is/',11000,
+        {'Content-Type':'application/json',Accept:'application/json'},
+        JSON.stringify({q:ip,key:apiKey})).then(JSON.parse));
+    } else add('ipapi',getJSON('https://api.ipapi.is/?q='+encodeURIComponent(ip),11000));
     add('ipwho',getJSON('https://ipwho.is/'+encodeURIComponent(ip),11000));
-    // IPPure scores the ACTUAL requesting egress. Validate the returned IP.
+    // IPPure reports the IP of ITS request; it does not query arbitrary addresses.
     add('ippure',getJSON('https://my.ippure.com/v1/info',11000));
     var su=getConfig('scamalytics_user'),sk=getConfig('scamalytics_key');
     if(su && sk){
@@ -190,95 +191,106 @@
         '?key='+encodeURIComponent(sk)+'&ip='+encodeURIComponent(ip),11000));
     }
     var ik=getConfig('ipqs_key');
-    if(ik) add('ipqs',getJSON('https://ipqualityscore.com/api/json/ip?ip='+encodeURIComponent(ip)+
-      '&strictness=0&allow_public_access_points=true&lighter_penalties=true&mobile=true',
-      11000,{'IPQS-KEY':ik,Accept:'application/json'}));
+    if(ik){
+      add('ipqs',getJSON('https://ipqualityscore.com/api/json/ip?ip='+encodeURIComponent(ip)+
+        '&strictness=0&allow_public_access_points=true&lighter_penalties=true&mobile=true',
+        11000,{'IPQS-KEY':ik,Accept:'application/json'}));
+    }
 
     Promise.all(jobs).then(function(){
       var p=outcomes.proxycheck;
-      var rec=p && p.ok && p.data && p.data[ip] || null;
-      var status=p && p.ok && p.data && p.data.status;
-      var validP=!!(rec && rec.detections && (status==='ok'||status==='warning'));
-      var det=validP?rec.detections:{};
+      var record=p && p.ok && p.data && p.data[ip] || {};
+      var validP=!!(record.detections && (p.data.status==='ok' || p.data.status==='warning'));
+      var det=validP?record.detections:{};
       var pcRisk=validP?score(det.risk):null;
-      var loc=validP?rec.location||{}:{};
-      var net=validP?rec.network||{}:{};
-      var geo=outcomes.ipapi;
-      var g=geo && geo.ok && geo.data && !geo.data.error ? geo.data : null;
-      var who=outcomes.ipwho;
-      var w=who && who.ok && who.data && who.data.success!==false ? who.data : null;
+      var loc=validP?record.location||{}:{};
+      var net=validP?record.network||{}:{};
+      var geo=outcomes.ipapi, g=geo && geo.ok && geo.data && !geo.data.error?geo.data:null;
+      var who=outcomes.ipwho, w=who && who.ok && who.data && who.data.success!==false?who.data:null;
       var pr=outcomes.ippure;
       var pure=pr && pr.ok && pr.data && validIP(pr.data.ip) ? pr.data : null;
-      var pureScore=null, pureNote='数据源不可用';
-      if(pure && pure.ip===ip){
-        pureScore=score(pure.fraudScore);
-        pureNote=pureScore===null?'暂无风险分':'本机构风险分';
-      } else if(pure){
-        pureNote='检测出口不一致';
-      } else if(pr){
-        pureNote='API 不可用';
-      }
-      var pcNote=validP?'本机构风险分':(p&&p.ok?'评分未返回':'API 不可用');
-      var type=txt(net.type,txt(pure && pure.ip===ip && (pure.isResidential===true?'Residential':null),
-        txt(g && g.is_datacenter===true?'Datacenter':null,'未知')));
-      var country=txt(loc.country_name,txt(g && g.location && g.location.country,txt(w&&w.country)));
+      var pureSameIP=!!(pure && pure.ip===ip);
+      var pureScore=pureSameIP?score(pure.fraudScore):null;
+      var isV6=ip.indexOf(':')>=0;
+      var type=txt(net.type,txt(g && g.is_datacenter===true?'Datacenter':null,'未知'));
+      var country=txt(loc.country_name,txt(g&&g.location&&g.location.country,txt(w&&w.country)));
       var city=txt(loc.city_name,txt(g&&g.location&&g.location.city,txt(w&&w.city)));
       var asn=txt(net.asn,txt(g&&g.asn&&g.asn.asn,txt(w&&w.connection&&w.connection.asn)));
-      var company=txt(net.provider,txt(g&&g.company&&g.company.name,txt(w&&w.connection&&w.connection.org)));
-      var s=outcomes.scamalytics;
-      var sa=s&&s.ok&&s.data&&s.data.scamalytics||{};
-      var scamScore=s&&s.ok?score(sa.scamalytics_score):null;
-      var q=outcomes.ipqs;
-      var ipqsScore=q&&q.ok?score(q.data&&q.data.fraud_score):null;
-      var badges=validP?
-         pill('代理：'+flag(det.proxy),det.proxy)+pill('VPN：'+flag(det.vpn),det.vpn)+
-         pill('机房：'+flag(det.hosting),det.hosting)+pill('Tor：'+flag(det.tor),det.tor):
-         pill('proxycheck 类型未返回',null);
-      // risk score 0 is valid. Lack of a detection does NOT prove residential quality.
-      var cleanNote=pcRisk===0?'0 分只是该机构当前未识别明显风险，不代表住宅 IP 或所有网站都认为纯净。':
-        '评分越低表示该机构评估的风险越低；不同机构分数不能混算。';
+      var provider=txt(net.provider,txt(g&&g.company&&g.company.name,txt(w&&w.connection&&w.connection.org)));
+      var s=outcomes.scamalytics, so=s&&s.ok&&s.data&&s.data.scamalytics||{};
+      var scamScore=s&&s.ok?score(so.scamalytics_score):null;
+      var q=outcomes.ipqs, ipqsScore=q&&q.ok?score(q.data&&q.data.fraud_score):null;
+      var showDetails=conf && (conf.show_details===true || conf.show_details==='true');
+      var scoreColor=pcRisk===null?'#697386':pcRisk<=25?'#17764a':pcRisk<=50?'#a76b0c':'#bf3e37';
+      var scoreText=pcRisk===null?'无有效评分':pcRisk+' / 100';
+      var riskLabel=pcRisk===null?'':pcRisk<=25?'较低':pcRisk<=50?'中等':'较高';
+      var typemap={Hosting:'机房',Datacenter:'机房',Residential:'住宅',Business:'商业网络',Mobile:'移动网络'};
+      var typeChinese=typemap[type]||type;
+      if(typeChinese!==type)typeChinese+='（'+type+'）';
+      var addressLine=country + (city!=='未知'?' · '+city:'');
+      var card=[];
+      function line(label,value){
+        return '<div style="font-size:16px;line-height:1.55;margin:5px 0;">'+
+          '<span style="color:#596273;">'+htmlEsc(label)+'：</span>'+
+          '<b style="font-size:16px;color:#1e293b;">'+hText(value)+'</b></div>';
+      }
+      function labelStatus(label,val){
+        return htmlEsc(label)+' '+(val===true?'是':val===false?'否':'未知');
+      }
+      function statusLine(label,val){
+        return '<span style="font-size:15px;color:'+(val===true?'#b04a32':val===false?'#28734f':'#697386')+';">'+
+          labelStatus(label,val)+'</span>';
+      }
 
-      var debug=[];
-      discovery.failed.forEach(function(x){debug.push('出口探测 · '+x);});
-      if(!p.ok)debug.push('proxycheck.io · '+p.error);
-      if(!geo.ok)debug.push('ipapi.is · '+geo.error);
-      if(!who.ok)debug.push('ipwho.is · '+who.error);
-      if(!pr.ok)debug.push('IPPure · '+pr.error);
-      if(pure&&pure.ip!==ip)debug.push('IPPure 返回 '+pure.ip+'，与检测目标 '+ip+' 不同，已排除评分');
-      if(discovery.warning)debug.push(discovery.warning);
-      var debugHtml=debug.length?debug.map(function(x){return '<div style="padding:4px 0;">'+htmlEsc(x)+'</div>';}).join(''):
-        '<div>没有发现请求报错。</div>';
-      var html='<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;line-height:1.4;color:#232b36;text-align:left;overflow-wrap:anywhere;padding:12px 4px 68px;">'+
-        '<div style="font-size:20px;font-weight:800;margin:3px 4px 5px;">节点风险检测 <span style="font-size:10px;font-weight:600;color:#8c93a1;">Kiki版 v1.2</span></div>'+
-        '<div style="font-size:11px;color:#767d88;margin:0 4px 12px;">'+htmlEsc(node)+'</div>'+
-        '<div style="background:#202c45;border-radius:17px;padding:15px 16px;margin-bottom:11px;color:#fff;">'+
-          '<div style="font-size:10px;color:#c2cbdb;">当前出口 '+(ip.indexOf(':') >= 0 ? 'IPv6' : 'IPv4')+'</div>'+
-          '<div style="font-size:24px;letter-spacing:.4px;font-weight:800;margin:3px 0 7px;">'+hText(ip)+'</div>'+
-          '<div style="font-size:12px;color:#cbd4e2;">'+hText(country)+' · '+hText(city)+'&nbsp;&nbsp; | &nbsp;&nbsp;'+hText(type)+'</div>'+
-          '<div style="font-size:10px;color:#9eabc0;margin-top:9px;">IP 来源：'+hText(discovery.source)+'</div>'+
-        '</div>'+
-        '<div style="display:flex;gap:9px;">'+
-          '<div style="flex:1;min-width:0;">'+riskCard('proxycheck.io · 风险',pcRisk,pcNote)+'</div>'+
-          '<div style="flex:1;min-width:0;">'+riskCard('IPPure · 风险',pureScore,pureNote)+'</div>'+
-        '</div>'+
-        '<div style="color:#767d87;font-size:11px;margin:0 3px 13px;">'+htmlEsc(cleanNote)+'</div>'+
-        block('风险识别 · proxycheck.io',badges+
-          '<div style="color:#737987;font-size:11px;margin-top:4px;">仅代表该数据库识别状态。Business/机房/住宅类型不等于风险评分。</div>')+
-        block('归属地与网络',item('IP 类型',type)+item('IPPure 住宅',pure&&pure.ip===ip?flag(pure.isResidential):'未确认')+item('国家/城市',country+' · '+city)+
-          item('ASN',asn)+item('运营商',company))+
-        details('更多数据源（Scamalytics / IPQS / ASN）',
-          item('Scamalytics',!su||!sk?'未配置密钥':scamScore===null?'接口未提供分数 / 请求异常':scamScore+'/100')+
-          item('IPQualityScore',!ik?'未配置密钥':ipqsScore===null?'接口未提供分数 / 请求异常':ipqsScore+'/100')+
-          item('ipapi.is',g?'已返回基础资料':geo.error)+
-          item('ipwho.is',w?'已返回基础资料':who.error))+
-        details('出口 IP 与检测日志',
-          item('IPv4',ip)+item('IPv6',discovery.ipv6||'未检测到')+
-          item('出口来源',discovery.source)+
-          '<div style="padding-top:7px;color:#8a9099;font-size:11px;">不同 IP 协议族出现两个地址是正常现象，不直接视为出口分流。</div>'+
-          (discovery.warning?'<div style="color:#b45309;margin-top:6px;">'+htmlEsc(discovery.warning)+'</div>':'')+
-          debugHtml)+
-        '<div style="font-size:10px;color:#8b929b;padding:4px 7px;">检测结果仅供参考 · 第三方接口可能限流或误判 · 不提供综合纯净度分</div></div>';
-      finishHtml(html);
+      card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
+        'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.3</span></div>');
+      card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
+      card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
+      card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
+      card.push('<div style="font-size:16px;color:#444f60;margin-bottom:11px;">'+hText(addressLine)+'</div>');
+      card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:8px 0 10px;">');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">风险分 · proxycheck.io</div>');
+      card.push('<div style="font-size:31px;font-weight:800;color:'+scoreColor+';margin:2px 0 6px;">'+hText(scoreText)+
+        (riskLabel?' <span style="font-size:15px;font-weight:600;color:'+scoreColor+';">'+riskLabel+'</span>':'')+'</div>');
+      card.push(line('IP 类型',typeChinese));
+      card.push(line('ASN',asn));
+      card.push(line('运营商',provider));
+      if(validP){
+        card.push('<div style="font-size:15px;line-height:1.7;margin-top:10px;">'+
+          statusLine('机房',det.hosting)+'　'+statusLine('代理',det.proxy)+'</div>');
+        card.push('<div style="font-size:15px;line-height:1.7;">'+
+          statusLine('VPN',det.vpn)+'　'+statusLine('Tor',det.tor)+'</div>');
+      } else {
+        card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
+      }
+      if(pureScore!==null){
+        card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 9px;">');
+        card.push(line('IPPure 风险分',pureScore+' / 100（独立评分）'));
+      }
+      if(scamScore!==null)card.push(line('Scamalytics',scamScore+' / 100（独立评分）'));
+      if(ipqsScore!==null)card.push(line('IPQualityScore',ipqsScore+' / 100（独立评分）'));
+      card.push('<div style="font-size:13px;line-height:1.5;color:#7a8190;margin-top:11px;">'+
+        '各机构评分标准不同；低风险不代表住宅 IP，也不保证平台解锁。</div>');
+      if(showDetails){
+        card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 10px;">');
+        card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
+        card.push(line('出口来源',discovery.source));
+        if(discovery.ipv6)card.push(line('附加 IPv6',discovery.ipv6));
+        if(pure&&!pureSameIP)card.push(line('IPPure', '返回 '+pure.ip+'，与本次出口不同，已排除评分'));
+        else if(!pure)card.push(line('IPPure','未取得有效数据'));
+        if(discovery.warning)card.push(line('IP 探针',discovery.warning));
+        var errors=discovery.failed.slice();
+        ['proxycheck','ipapi','ipwho','ippure','scamalytics','ipqs'].forEach(function(n){
+          if(outcomes[n] && !outcomes[n].ok)errors.push(n+': '+outcomes[n].error);
+        });
+        if(errors.length){
+          card.push('<div style="font-size:15px;font-weight:700;color:#a34a3c;margin-top:8px;">接口错误</div>');
+          errors.forEach(function(e){card.push('<div style="font-size:13px;color:#626a78;margin:4px 0;">'+htmlEsc(e)+'</div>');});
+        }
+      }
+      card.push('</div>');
+      finishHtml(card.join(''));
     }).catch(function(e){finish('Kiki版 · 检测错误',errorText(e));});
   }
 
