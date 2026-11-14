@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v1.3.0
+ * 节点 IP 风险检测（Kiki版）v1.4.0
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -209,8 +209,18 @@
       var who=outcomes.ipwho, w=who && who.ok && who.data && who.data.success!==false?who.data:null;
       var pr=outcomes.ippure;
       var pure=pr && pr.ok && pr.data && validIP(pr.data.ip) ? pr.data : null;
-      var pureSameIP=!!(pure && pure.ip===ip);
-      var pureScore=pureSameIP?score(pure.fraudScore):null;
+      var pureSameIP=!!(pure && pure.ip.toLowerCase()===ip.toLowerCase());
+      // On dual-stack connections, IPPure may report IPv6 while the primary result
+      // is IPv4. This can be presented ONLY when that IPv6 has been observed
+      // independently by another probe through the SAME selected Loon node.
+      var pureVerifiedV6=!!(pure && !pureSameIP && discovery.ipv6 &&
+        pure.ip.toLowerCase()===discovery.ipv6.toLowerCase());
+      var pureUsable=pureSameIP || pureVerifiedV6;
+      var ippureCoefficient=pureUsable?score(pure.ippureCoefficient):null;
+      var pureScore=ippureCoefficient!==null?ippureCoefficient:(pureUsable?score(pure.fraudScore):null);
+      // This coefficient is estimated by the IPPure website; it is NOT
+      // Cloudflare's official Bot Management or WAF score.
+      var ippureCfEstimate=pureUsable?score(pure.cloudflareCoefficient):null;
       var isV6=ip.indexOf(':')>=0;
       var type=txt(net.type,txt(g && g.is_datacenter===true?'Datacenter':null,'未知'));
       var country=txt(loc.country_name,txt(g&&g.location&&g.location.country,txt(w&&w.country)));
@@ -244,7 +254,7 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.3</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.4</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
@@ -264,9 +274,26 @@
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
-      if(pureScore!==null){
-        card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 9px;">');
-        card.push(line('IPPure 风险分',pureScore+' / 100（独立评分）'));
+      // Keep IPPure independent. A verified IPv6 score must never be labeled
+      // as the risk score for the IPv4 in the header.
+      card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 9px;">');
+      card.push('<div style="font-size:16px;font-weight:700;color:#47566c;margin:0 0 4px;">IPPure · 独立检测</div>');
+      if(pureUsable){
+        card.push('<div style="font-size:13px;color:#687285;margin-bottom:5px;">'+
+          (pureVerifiedV6?'IPv6 出口（与上方 IPv4 不同）':'与上方出口 IP 相同')+'</div>');
+        if(pureVerifiedV6)card.push('<div style="font-size:13px;color:#626a78;overflow-wrap:anywhere;margin-bottom:5px;">'+hText(pure.ip)+'</div>');
+        if(pureScore!==null)card.push(line('IPPure 系数',pureScore+'%（独立风险指标）'));
+        else card.push('<div style="font-size:14px;color:#7a8190;">IPPure 未返回有效系数</div>');
+        if(ippureCfEstimate!==null)card.push(line('CF 系数估算',ippureCfEstimate+'%（IPPure 自行估算）'));
+        if(pure.isDataCenter===true || pure.isDataCenter===false){
+          card.push(line('IPPure 类型',pure.isDataCenter?'机房':'非机房（该数据源判断）'));
+        } else if(pure.isResidential===true || pure.isResidential===false) {
+          card.push(line('IPPure 住宅',pure.isResidential?'是':'否'));
+        }
+      } else if(pure){
+        card.push('<div style="font-size:13px;color:#a16a25;">返回的出口 IP 与当前节点已核实的 IP 不符，评分暂不采用。</div>');
+      } else {
+        card.push('<div style="font-size:13px;color:#7a8190;">暂未获得数据，无法显示 IPPure 评分。</div>');
       }
       if(scamScore!==null)card.push(line('Scamalytics',scamScore+' / 100（独立评分）'));
       if(ipqsScore!==null)card.push(line('IPQualityScore',ipqsScore+' / 100（独立评分）'));
@@ -277,8 +304,11 @@
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
         card.push(line('出口来源',discovery.source));
         if(discovery.ipv6)card.push(line('附加 IPv6',discovery.ipv6));
-        if(pure&&!pureSameIP)card.push(line('IPPure', '返回 '+pure.ip+'，与本次出口不同，已排除评分'));
+        if(pure && pureVerifiedV6)card.push(line('IPPure IPv6','已通过其他出口探针核对：'+pure.ip));
+        else if(pure && !pureSameIP)card.push(line('IPPure','返回 '+pure.ip+'，与已核实的节点出口不符，未采用评分'));
         else if(!pure)card.push(line('IPPure','未取得有效数据'));
+        if(pureUsable && pure.ipSource)card.push(line('IPPure IP 来源',pure.ipSource));
+        if(pureUsable && pure.ipProperties)card.push(line('IPPure IP 属性',typeof pure.ipProperties==='string'?pure.ipProperties:JSON.stringify(pure.ipProperties)));
         if(discovery.warning)card.push(line('IP 探针',discovery.warning));
         var errors=discovery.failed.slice();
         ['proxycheck','ipapi','ipwho','ippure','scamalytics','ipqs'].forEach(function(n){
