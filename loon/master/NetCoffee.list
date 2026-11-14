@@ -1,0 +1,10 @@
+# NAME: Net.Coffee IP 检测（Kiki版）
+# AUTHOR: kiki0-zz
+# UPDATED: 2026-11-14
+# FORMAT: Loon Remote Rule (.list)
+# 代替原 Ping0 检测站分流。导入 Loon「远程规则」后自行选择策略组/节点。
+# 仅匹配 Net.Coffee IP 查询、评分、Claude 和 GPT 检测站域名。
+# 不覆盖 ChatGPT / Claude 等第三方探测域名，这些仍遵循各自分流规则。
+# 无需修改主配置，不自动切换主代理。
+
+DOMAIN-SUFFIX,ip.net.coffee
