@@ -1,5 +1,5 @@
 /**
- * 节点 IP 风险检测（Kiki版）v1.5.0
+ * 节点 IP 风险检测（Kiki版）v1.6.0
  * Loon Generic script; runs ONLY when launched from a node/strategy menu.
  * Uses independent official APIs. Scores from different companies are NOT equivalent.
  * Maintainer: https://github.com/kiki0-zz/QX_rules
@@ -229,6 +229,14 @@
       var pcRisk=validP?score(det.risk):null;
       var loc=validP?record.location||{}:{};
       var net=validP?record.network||{}:{};
+      var device=validP?record.device_estimate||{}:{};
+      function estimatedDevices(v){
+        if(v===null||v===undefined||v==='')return null;
+        var n=Number(v);
+        return Number.isFinite(n)&&n>=0&&Number.isInteger(n)?n:null;
+      }
+      var devicesIp=estimatedDevices(device.address);
+      var devicesSubnet=estimatedDevices(device.subnet);
       var geo=outcomes.ipapi, g=geo && geo.ok && geo.data && !geo.data.error?geo.data:null;
       var who=outcomes.ipwho, w=who && who.ok && who.data && who.data.success!==false?who.data:null;
       var pr=outcomes.ippure;
@@ -279,34 +287,46 @@
 
       card.push('<div style="font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'+
         'font-size:16px;line-height:1.5;text-align:left;color:#1f2937;overflow-wrap:anywhere;padding:8px 8px 14px;">');
-      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.5</span></div>');
+      card.push('<div style="font-size:20px;font-weight:800;margin:0 0 3px;">节点风险检测 <span style="font-size:12px;color:#7f8794;">Kiki版 v1.6</span></div>');
       card.push('<div style="font-size:15px;color:#626a78;margin:0 0 13px;">'+hText(node)+'</div>');
       card.push('<div style="font-size:14px;color:#657080;">当前出口 '+(isV6?'IPv6':'IPv4')+'</div>');
       card.push('<div style="font-size:23px;font-weight:800;color:#17263f;margin:2px 0 5px;overflow-wrap:anywhere;">'+hText(ip)+'</div>');
       card.push('<div style="font-size:16px;color:#444f60;margin-bottom:11px;">'+hText(addressLine)+'</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:8px 0 10px;">');
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">风险分 · proxycheck.io</div>');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;">风险 · proxycheck.io</div>');
       card.push('<div style="font-size:31px;font-weight:800;color:'+scoreColor+';margin:2px 0 6px;">'+hText(scoreText)+
         (riskLabel?' <span style="font-size:15px;font-weight:600;color:'+scoreColor+';">'+riskLabel+'</span>':'')+'</div>');
+      if(pcRisk!==null)card.push('<div style="height:5px;background:#e6e8ee;border-radius:4px;margin-bottom:9px;overflow:hidden;">'+
+        '<div style="height:5px;background:'+scoreColor+';width:'+Math.max(pcRisk,1)+'%;"></div></div>');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin-top:9px;">网络信息</div>');
       card.push(line('IP 类型',typeChinese));
       card.push(line('ASN',asn));
       card.push(line('运营商',provider));
       if(validP){
-        // Use four equal-width items to avoid wrapping into two lines.
-        card.push('<div style="display:table;width:100%;table-layout:fixed;margin-top:10px;">'+
-          '<div style="display:table-row;">'+
-          '<span style="display:table-cell;width:25%;font-size:13px;text-align:left;white-space:nowrap;">'+statusLine('机房',det.hosting)+'</span>'+
-          '<span style="display:table-cell;width:25%;font-size:13px;text-align:center;white-space:nowrap;">'+statusLine('代理',det.proxy)+'</span>'+
-          '<span style="display:table-cell;width:25%;font-size:13px;text-align:center;white-space:nowrap;">'+statusLine('VPN',det.vpn)+'</span>'+
-          '<span style="display:table-cell;width:25%;font-size:13px;text-align:right;white-space:nowrap;">'+statusLine('Tor',det.tor)+'</span>'+
-          '</div></div>');
+        // Use real table cells: no reliance on CSS grid/flex in Loon.
+        card.push('<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin-top:9px;"><tr>'+
+          '<td width="25%" style="white-space:nowrap;text-align:left;">'+statusLine('机房',det.hosting)+'</td>'+
+          '<td width="25%" style="white-space:nowrap;text-align:center;">'+statusLine('代理',det.proxy)+'</td>'+
+          '<td width="25%" style="white-space:nowrap;text-align:center;">'+statusLine('VPN',det.vpn)+'</td>'+
+          '<td width="25%" style="white-space:nowrap;text-align:right;">'+statusLine('Tor',det.tor)+'</td>'+
+          '</tr></table>');
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
+      }
+      card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
+      if(devicesIp!==null || devicesSubnet!==null){
+        if(devicesIp!==null)card.push(line('单 IP 设备',devicesIp+' 台（估算）'));
+        if(devicesSubnet!==null)card.push(line('同网段设备',devicesSubnet+' 台（估算）'));
+        card.push('<div style="font-size:12px;color:#7a8190;line-height:1.45;margin-top:4px;">'+
+          '来源：proxycheck.io。设备数不等于共享人数或当前在线人数；估算为 0 也不代表无人共用。</div>');
+      }else{
+        card.push('<div style="font-size:13px;color:#7a8190;">当前没有可用的设备估算。</div>');
       }
       // Keep IPPure independent. A verified IPv6 score must never be labeled
       // as the risk score for the IPv4 in the header.
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 9px;">');
-      card.push('<div style="font-size:16px;font-weight:700;color:#47566c;margin:0 0 4px;">IPPure · 独立检测</div>');
+      card.push('<div style="font-size:16px;font-weight:700;color:#47566c;margin:0 0 4px;">IPPure · 独立数据源</div>');
       if(pureUsable){
         card.push('<div style="font-size:13px;color:#687285;margin-bottom:5px;">'+
           (pureVerifiedV6?'IPv6 出口（与上方 IPv4 不同）':'与上方出口 IP 相同')+'</div>');
@@ -327,7 +347,7 @@
       if(scamScore!==null)card.push(line('Scamalytics',scamScore+' / 100（独立评分）'));
       if(ipqsScore!==null)card.push(line('IPQualityScore',ipqsScore+' / 100（独立评分）'));
       card.push('<div style="font-size:13px;line-height:1.5;color:#7a8190;margin-top:11px;">'+
-        '各机构评分标准不同；低风险不代表住宅 IP，也不保证平台解锁。</div>');
+        '各机构评分标准不同；设备估算不等于 Ping0 共享人数，也不保证平台解锁。</div>');
       if(showDetails){
         card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:12px 0 10px;">');
         card.push('<div style="font-size:17px;font-weight:700;margin-bottom:7px;">检测详情</div>');
@@ -339,6 +359,12 @@
         else if(!pure)card.push(line('IPPure','未取得有效数据'));
         if(pureUsable && pure.ipSource)card.push(line('IPPure IP 来源',pure.ipSource));
         if(pureUsable && pure.ipProperties)card.push(line('IPPure IP 属性',typeof pure.ipProperties==='string'?pure.ipProperties:JSON.stringify(pure.ipProperties)));
+        if(net.range)card.push(line('网络段',net.range));
+        if(loc.region_name)card.push(line('数据库行政区',loc.region_name));
+        if(loc.latitude!=null && loc.longitude!=null)card.push(line('GeoIP 坐标',loc.latitude+', '+loc.longitude));
+        if(validP && det.confidence!=null)card.push(line('检测置信度',det.confidence+' / 100'));
+        if(pureUsable && typeof pure.isBroadcast==='boolean')card.push(line('IPPure 广播标记',pure.isBroadcast?'是':'否'));
+        card.push(line('Ping0 共享人数','无可用公开 API，未接入'));
         if(discovery.warning)card.push(line('IP 探针',discovery.warning));
         var errors=discovery.failed.slice();
         ['proxycheck','ipapi','ipwho','ippure','scamalytics','ipqs'].forEach(function(n){
