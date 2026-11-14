@@ -1,21 +1,28 @@
-#!name=航旅纵横Pro去广告 (kiki安全版)
-#!desc=只拦截开屏广告专用域名，绝不误杀登录与航班行程核心接口。
+#!name=航旅纵横Pro去广告 (Kiki安全版)
+#!desc=修复开屏广告：拦截新的广告图片路径并保留旧开屏接口，不修改航班/行程/值机/登录接口。
 #!author=kiki
 #!tag=去广告
-# UPDATED: 2026-08-21
+#!date=2026-11-14
 
-[Rule]
-# 拦截第三方广告联盟及追踪
-DOMAIN, ad.umetrip.com, REJECT
-DOMAIN-KEYWORD, umetrip-ad, REJECT
-
-# 拦截真正的开屏广告专用域名（防止直接阻断导致白屏卡顿，这里用 REJECT-DROP 或者交给下面的重写处理）
-DOMAIN, startup.umetrip.com, REJECT
-DOMAIN, discardrp.umetrip.com, REJECT
+# 参考来源：
+# 奶思 fmz200: https://github.com/fmz200/wool_scripts
+# 杏九 2026-11: https://github.com/xingjiu29/Umetrip
+#
+# 旧版失效排查：
+# 1. 开屏广告资源已可通过 oss.umetrip.com/fs/advert/polite 加载；
+# 2. 原 [Rule] 对 startup/discardrp 整个域名 REJECT，可能导致后续的 URL Rewrite 无法执行；
+# 3. 只针对开屏资源和旧开屏接口重写，避免拦截 home/umerp 等行程、值机业务主机。
+#
+# 提醒：部分首页轮播图片也可能使用 /fs/advert/polite 路径，
+# 如出现正常图片被误挡，可注释以下第一条规则。
+# 已下载到 App 缓存中的广告可能要重启或清除缓存后才消失。
 
 [Rewrite]
-# 核心修正：只拒绝专门负责启动页广告的子域名请求，绝对放行主干道 (umerp 和 home)
-^https?:\/\/(discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native reject-dict
+# 最新开屏广告图片素材（服务端广告响应已加密时仍可拦截图片）
+^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite(?:\/|\?|$) - reject
+
+# 兼容旧版开屏广告请求（只匹配这两个域名的指定路径）
+^https?:\/\/(?:discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native(?:\?.*)?$ - reject
 
 [MitM]
-hostname = startup.umetrip.com, discardrp.umetrip.com
+hostname = %APPEND% oss.umetrip.com, startup.umetrip.com, discardrp.umetrip.com
