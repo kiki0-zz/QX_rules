@@ -19,10 +19,10 @@
 
 [Rewrite]
 # 最新开屏广告图片素材（服务端广告响应已加密时仍可拦截图片）
-^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite(?:\/|\?|$) - reject
+^https?:\/\/oss\.umetrip\.com\/fs\/advert\/polite(?:\/|\?|$) reject
 
 # 兼容旧版开屏广告请求（只匹配这两个域名的指定路径）
-^https?:\/\/(?:discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native(?:\?.*)?$ - reject
+^https?:\/\/(?:discardrp|startup)\.umetrip\.com\/gateway\/api\/umetrip\/native(?:\?.*)?$ reject
 
 [MitM]
 hostname = %APPEND% oss.umetrip.com, startup.umetrip.com, discardrp.umetrip.com
