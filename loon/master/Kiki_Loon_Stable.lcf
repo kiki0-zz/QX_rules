@@ -205,6 +205,7 @@ https://raw.githubusercontent.com/Moli-X/Resources/main/Loon/Task.conf, tag=莫�
 # 保留空区段，方便后续扩展。
 
 [Plugin]
+https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/Zhixing_Kiki.plugin, enabled=true
 https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plugin, enabled=true
 https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/PTZone-Mobile.plugin, enabled=true
 https://kelee.one/Tool/Loon/Lpx/Remove_ads_by_keli.lpx, enabled=true
