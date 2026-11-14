@@ -68,7 +68,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
-| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | 长按节点运行、无需 MitM；Loon 3.5.1(983)+，可选本机配置 API Key |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v1.2 原生 HTML 卡片报告；proxycheck.io + IPPure 独立评分、双栈区分；免 MitM |
 
 示例远程插件地址：
 
@@ -81,7 +81,9 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 ### 节点 IP 风险检测（Kiki版）
 
 - 在 Loon 插件中添加上面的 Raw 链接并启用，然后到「所有节点」长按目标节点，选择「节点 IP 风险检测 · Kiki版」。
-- 默认通过所选节点请求 ipify 取得**实际出口 IP**，然后通过同一个节点调用 [proxycheck.io v3](https://proxycheck.io/api/)（实际风险分、代理/VPN/机房识别）及 [ipapi.is](https://ipapi.is/developers.html)（匿名基础归属地/ASN）。
+- v1.2 使用 Cloudflare Trace、ident.me、ipify、IPinfo 多来源获取**实际出口 IP**：IPv4 / IPv6 分开处理，不再将两个协议族地址不同误报成线路分流；不改变分流、主配置或 DNS。
+- Loon 原生 HTML 报告优先显示两张评分卡、出口 IP、IP 类型和 ASN。来源包括 [proxycheck.io v3](https://proxycheck.io/api/) 与 [IPPure API](https://ippure.com/MyIP-Info-API)，**两种评分不混算**；IPPure 的返回出口 IP 若不等于当前目标 IP，忽略其评分。ipapi.is、ipwho.is 用于交叉核对地理和网络资料，不冒充风险分。
+- 检测日志、其他 API 和双栈详情放在可展开区域，便于集中查看重点；如果 Loon 版本不支持 HTML 消息需升级 Loon。
 - **可选**：在 Loon 的本机插件参数中设置 ipapi.is API Key、Scamalytics 用户名/注册区域/API Key、IPQualityScore API Key。用户不配置时会显示「未配置」，不会伪造其他机构的评分。匿名 ipapi.is 限额低且不提供 VPN/代理标签；有账号密钥才返回完整检测字段。
 - API Key 不写在公开仓库，但**包含密钥的本机配置若导出分享也可能泄露密钥**。Scamalytics API 按官方要求将密钥放在 HTTPS 查询参数中，仅在你本机通过节点调用。
 - 依赖第三方 API，可能因配额耗尽、地区限制、网络故障而显示失败。分数代表各机构风控判断，不是跨机构统一的「纯净度」，也不能证明某个 App 一定解锁。
