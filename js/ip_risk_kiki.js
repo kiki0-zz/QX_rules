@@ -269,15 +269,34 @@
       // Guidance maps to proxycheck.io's suggested "allow/challenge/deny" bands.
       // It is not an access prediction for any specific platform.
       var riskLabel=pcRisk===null?'无数据':pcRisk<=25?'低风险':pcRisk<=50?'建议验证':pcRisk<=75?'较高风险':'高风险';
-      var riskAdvice=pcRisk===null?'暂无有效风险分，不能判断平台使用情况。':
-        pcRisk<=25?'该数据库未发现明显高风险记录，可优先试用；是否支持特定平台仍需实际测试。':
-        pcRisk<=50?'部分网站可能增加验证码或登录验证，建议测试后再用于长期账号。':
-        pcRisk<=75?'严格风控网站可能要求更多验证，不建议作为重要账号的首选出口。':
-        '该数据库提示明显风险，建议优先考虑其他节点，尤其是重要账号登录或注册。';
-      var typeAdvice=(det.tor===true||det.proxy===true||det.vpn===true)?
-        '该数据源识别到代理／VPN／Tor 特征，可能增加部分平台验证。':
-        det.hosting===true?'这是机房 IP；低评分也不代表是住宅 IP。':
-        '';
+      // App suitability stars are Kiki's transparent IP-ONLY heuristics, not
+      // scores returned by Google, TikTok, OpenAI, Anthropic or Ping0.
+      // Basis: proxycheck.io's public risk bands, hosting, proxy/VPN and Tor flags.
+      // Never infer actual unlock, sign-in reliability, regional licensing,
+      // bandwidth, device fingerprint, account trust or user behavior.
+      var hasScore=pcRisk!==null && validP;
+      function starEstimate(kind) {
+        if(!hasScore)return null;
+        var value=pcRisk<=25?5:pcRisk<=50?4:pcRisk<=75?2:1;
+        if(det.hosting===true) value-=kind==='social'?2:kind==='ai'?1:0;
+        if(det.proxy===true || det.vpn===true) value-=1;
+        if(det.tor===true) value-=2;
+        if(net.type===undefined || net.type===null || net.type==='') value=Math.min(value,3);
+        return Math.max(1,Math.min(5,value));
+      }
+      var starSocial=starEstimate('social');
+      var starGoogle=starEstimate('general');
+      var starAI=starEstimate('ai');
+      function starText(n){return n===null?'未评估':'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);}
+      function starLabel(n){return n===null?'数据不足':n>=5?'IP 层较有利':n>=4?'较适合参考':n>=3?'需留意':n>=2?'谨慎使用':'建议优先换节点';}
+      var inputs=[];
+      if(hasScore) inputs.push('风险 '+pcRisk+'/100');
+      if(det.hosting===true)inputs.push('机房 IP');
+      if(det.proxy===true)inputs.push('代理标记');
+      if(det.vpn===true)inputs.push('VPN 标记');
+      if(det.tor===true)inputs.push('Tor 标记');
+      if(det.hosting===false && det.proxy===false && det.vpn===false && det.tor===false)inputs.push('未识别明显匿名代理标签');
+      var starReason=hasScore?inputs.join(' · '):'没有可核实的风险分，因此不生成星级';
       var typemap={Hosting:'机房',Datacenter:'机房',Residential:'住宅',Business:'商业网络',Mobile:'移动网络'};
       var typeChinese=typemap[type]||type;
       if(typeChinese!==type)typeChinese+='（'+type+'）';
@@ -325,12 +344,22 @@
       } else {
         card.push('<div style="font-size:14px;color:#a56d0d;margin-top:8px;">风险识别数据暂不可用</div>');
       }
-      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 5px;">使用建议 · 风险参考</div>');
-      card.push('<div style="font-size:14px;line-height:1.5;color:#3d4b60;">'+htmlEsc(riskAdvice)+'</div>');
-      if(typeAdvice)card.push('<div style="font-size:13px;line-height:1.45;color:#687285;margin-top:5px;">'+htmlEsc(typeAdvice)+'</div>');
-      card.push('<div style="font-size:13px;line-height:1.5;color:#687285;margin-top:5px;">'+
-        'TikTok / Google / ChatGPT / Gemini / Claude：风险分不能判断解锁。'+
-        '请长按节点，选择「平台连通性检测 · Kiki版」实际验证。</div>');
+      // Keep the proven one-column Loon report. No flex/grid/table and no
+      // cross-platform HTTP probes; stars are local interpretation only.
+      card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:12px 0 6px;">场景适配参考 · IP 层估算</div>');
+      function starLine(label,n){
+        return '<div style="font-size:14px;line-height:1.65;margin:2px 0;color:#29354a;">'+
+          '<b>'+htmlEsc(label)+'</b>　'+
+          '<span style="font-size:17px;letter-spacing:.2px;color:#ad7412;">'+starText(n)+'</span> '+
+          '<span style="font-size:12px;color:#687285;">'+(n===null?'':n+'/5 · ')+htmlEsc(starLabel(n))+'</span></div>';
+      }
+      card.push(starLine('TikTok 运营',starSocial));
+      card.push(starLine('Google / YouTube',starGoogle));
+      card.push(starLine('AI 大模型',starAI));
+      card.push('<div style="font-size:12px;color:#697285;margin:0 0 5px;">AI 包括 ChatGPT / Gemini / Claude（同一通用规则）</div>');
+      card.push('<div style="font-size:13px;line-height:1.45;color:#5a6475;margin-top:4px;">判断依据：'+htmlEsc(starReason)+'</div>');
+      card.push('<div style="font-size:12px;line-height:1.45;color:#808795;margin-top:5px;">'+
+        '第三方风险数据 + Kiki 本地规则，不是平台官方评级；不判断地区支持、账号状态、视频速度或实际解锁。</div>');
       card.push('<hr style="border:0;border-top:1px solid #dfe3ea;margin:11px 0 9px;">');
       card.push('<div style="font-size:15px;font-weight:700;color:#47566c;margin:0 0 5px;">共享情况 · 设备估算</div>');
       if(devicesIp!==null || devicesSubnet!==null){
