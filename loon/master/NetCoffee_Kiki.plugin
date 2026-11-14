@@ -1,0 +1,16 @@
+#!name=Net.Coffee 快捷检测（Kiki版）
+#!desc=v0.1 长按 Loon 节点，查看该节点出口 IPv4 并快捷打开 Net.Coffee 的 Claude / GPT / IP 评分网页。浏览器出口遵循现有分流，不自动切换。
+#!author=kiki0-zz
+#!tag=工具,IP检测
+#!system=iOS
+#!loon_version=3.5.1(983)
+#!date=2026-11-14
+#!homepage=https://github.com/kiki0-zz/QX_rules
+
+# 此插件仅创建独立长按入口；不会修改用户主配置、规则或策略组，不需要 MitM。
+# 网页页面完全来自 Net.Coffee 原站，非复制、代理或镜像；无 API Key、无需付费。
+# 重要：脚本的 selected node 只用于出口 IP 探针，不会切换浏览器的策略。
+# 如弹窗内链接无法点击，可点击系统通知「Net.Coffee · Claude 检测」打开原站。
+
+[Script]
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_kiki.js") with tag="Net.Coffee 快捷检测 · Kiki版", img_url="safari.system", timeout=30
