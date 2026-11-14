@@ -1,5 +1,5 @@
 #!name=节点 IP 风险检测（Kiki版）
-#!desc=v0.4 一体化 IP 报告：Net.Coffee 信任评分、出口归属地/ASN/运营商/状态、共享设备估算和 Claude/GPT/IP 详情入口；不再显示自算星级。
+#!desc=v0.5 Net.Coffee 主评分新增深度查询和备用接口，接口失败显示原因；删除无效蓝色链接，长按节点新增 IP/Claude/GPT 三个真正可打开的通知入口。
 #!author=kiki0-zz
 #!tag=工具,IP检测
 #!system=iOS
@@ -7,14 +7,16 @@
 #!date=2026-11-14
 #!homepage=https://github.com/kiki0-zz/QX_rules
 
-# Kiki 的节点风险检测工具 v0.4。安装后在 Loon「节点」页面长按某个节点使用。
+# Kiki 的节点风险检测工具 v0.5。安装后在 Loon「节点」页面长按某个节点使用。
 # 只在用户手动触发时请求，不后台检测、不修改分流、不启用 MITM。
 # 默认使用适合 Loon 系统结果窗口的简短 HTML 速览。技术详情可在本机插件参数中开启。
 # 注意：Loon 当前结果窗口对 CSS 卡片和 <details> 折叠支持有限，因此不再依赖这些元素。
 # 双栈地址分别显示；东京特别区统一显示为 Tokyo（保留英文地名）。
 # 共享规模仅使用 proxycheck.io device_estimate 的设备估算（不是 Ping0 共享人数）；返回 0 不视为无人共享。
-# Net.Coffee 指定 IP 查询来自第三方公开使用的接口，非稳定 API 承诺；只显示其真实信任分，失败不伪造。
-# 点击 Net.Coffee 指定 IP 详情可核对所选节点；Claude/GPT 页面仍遵循浏览器分流。
+# Net.Coffee 主查询路径为 /api/ip/lookup/{IP}，旧 /api/iprisk/{IP} 仅备用；两者均非保证稳定的官方 API。
+# 查询失败时显示接口诊断，不以 proxycheck 风险分推算 Net.Coffee 信任分。
+# Loon 的 HTML 弹窗链接不能点击。请长按节点选择下列 IP/Claude/GPT 网页快捷入口，点击通知跳转。
+# IP 详情会尝试带上当前选择节点的出口 IPv4；Claude/GPT 页面仍遵循浏览器分流。
 # 不再显示 TikTok/Google/AI 自算星级；proxycheck 原始风险分仅作辅助参考。
 # IPPure 使用其公开接口，若报告的出口 IP 与目标不一致，不采用风险分。
 # 不填写密钥也能使用 proxycheck.io + ipapi.is 基础查询。
@@ -33,3 +35,6 @@ ipqs_key = input,"",type=string,tag=IPQualityScore API Key（可选）
 
 [Script]
 generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/ip_risk_kiki.js", {${show_details}, ${ipapi_key}, ${scamalytics_user}, ${scamalytics_region}, ${scamalytics_key}, ${ipqs_key}}) with tag="节点 IP 风险检测 · Kiki版", img_url="checkmark.shield.system", timeout=45
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_open_kiki.js", "ip") with tag="Net.Coffee · IP 详情 · Kiki版", img_url="safari.system", timeout=25
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_open_kiki.js", "claude") with tag="Net.Coffee · Claude · Kiki版", img_url="safari.system", timeout=15
+generic then script("https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/js/netcoffee_open_kiki.js", "gpt") with tag="Net.Coffee · GPT · Kiki版", img_url="safari.system", timeout=15
