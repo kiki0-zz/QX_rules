@@ -68,7 +68,7 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/Qx/master/Chatgpt.list
 | [ADshayujizhang.plugin](loon/master/ADshayujizhang.plugin) | 鲨鱼记账开屏配置和广告处理 | 需要 MitM |
 | [spotify.plugin](loon/master/spotify.plugin) | Spotify 播放兼容和广告请求处理 | 需要 MitM，注意与其他 Spotify 插件冲突 |
 | [hongguo_ad_block.plugin](loon/master/hongguo_ad_block.plugin) | 红果短剧开屏 / 常见插播广告域名与素材拦截（[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/hongguo_ad_block.plugin)） | 免 MitM、无远程脚本；可能影响同广告 SDK 的其他 App，非保证全去除 |
-| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v0.2 风险分 / 场景适配星级 / ASN / IP 属性 / 设备估算；无平台连通性检测；技术详情按需开启；免 MitM |
+| [IPRisk_Kiki.plugin](loon/master/IPRisk_Kiki.plugin) | 节点 IP 风险检测（Kiki版）：[Raw 订阅](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)、[JS 源码](js/ip_risk_kiki.js) | v0.3 轻量场景星级 / 风险分 / ASN / IP 属性 / 设备估算；无平台连通性检测；技术详情按需开启；免 MitM |
 
 示例远程插件地址：
 
@@ -80,9 +80,9 @@ https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/spotify.plu
 
 ### 节点 IP 风险检测（Kiki版）
 
-- 当前版本 **v0.2**：在 Loon 中长按任意节点，选择「节点 IP 风险检测 · Kiki版」。[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[源码](js/ip_risk_kiki.js)。不会更改主配置、分流或 DNS，不依赖 MitM。
+- 当前版本 **v0.3**：在 Loon 中长按任意节点，选择「节点 IP 风险检测 · Kiki版」。[插件 Raw](https://raw.githubusercontent.com/kiki0-zz/QX_rules/main/loon/master/IPRisk_Kiki.plugin)；[源码](js/ip_risk_kiki.js)。不会更改主配置、分流或 DNS，不依赖 MitM。
 - 报告提供：目标节点实际出口 IP（IPv4/IPv6 不混淆）、英文城市级别地区、proxycheck.io 原始风险分、IP 类型、ASN、运营商、机房 / 代理 / VPN / Tor 识别、单 IP 和网段设备估算以及可用时的 IPPure 独立评分。
-- **新增：场景适配参考星级（非平台官方、非 Ping0 原始星级、非可用性实测）**。展示 TikTok 运营、Google/YouTube 日常服务、AI 大模型（ChatGPT/Gemini/Claude）三个场景的 1–5 星，用已有的 IP 风险字段在手机本地计算，**不向这些平台发起额外连通性请求**。
+- **场景适配参考星级（非平台官方、非 Ping0 原始星级、非可用性实测）**。显示 TikTok、Google、AI 模型三行对齐的 1–5 星（不显示分数、评价文字或长说明，Google 涵盖常见 YouTube 使用，AI 模型为通用判断），用已有的 IP 风险字段在手机本地计算，**不向这些平台发起额外连通性请求**。
 - **星级算法透明**：proxycheck.io 风险分 `0–25 → 5 星`、`26–50 → 4 星`、`51–75 → 2 星`、`76–100 → 1 星`；检测到 Hosting 时 TikTok 运营减 2 星、AI 减 1 星（Google 日常不额外减）；检测到 Proxy 或 VPN 再减 1 星，Tor 再减 2 星；缺少网络类型数据时最多 3 星；最终限定 1–5 星。风险分缺失则「未评估」，不伪造星级。**这些权重是 Kiki 版的经验性规则，不是平台或数据商的实测阈值。**
 - 星级是“IP 层风险偏好”而不是“能否用 TikTok/Google/ChatGPT”，不能预测平台注册、账号封禁、账号环境、地区支持、设备信息、带宽/速度或推荐流量。特别是 Google 日常服务与谷歌账号注册风控不是一回事。不要把 IP 风险评分当作平台官方结果。
 - 参考依据：[proxycheck.io 风险评分和访问建议](https://proxycheck.io/api/)（公开风险分、机房/代理等识别）；[EasyGlobe 场景星级参考](https://easyglobegrowth.com/zh/tools/ping0-ip-check)（独立本地规则）；[IPOK 的 IP 层场景提示](https://ipok.io/t/ping0-alternative)。本插件借鉴理念，不复制它们的专有评分。
