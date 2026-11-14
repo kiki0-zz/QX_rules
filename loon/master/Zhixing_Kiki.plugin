@@ -1,18 +1,21 @@
-#!name=智行火车票去广告 (Kiki精简版)
-#!desc=仅尝试过滤智行火车票开屏广告，不触碰查询、抢票、支付等业务接口；首页广告暂未适配。
+#!name=智行火车票去广告 (Kiki测试版)
+#!desc=仅尝试拦截公开规则中的 tripAds 开屏接口；本插件尚未经最新版智行实机验证。
 #!author=kiki
-#!tag=去广告, 智行火车票
+#!tag=去广告
 #!homepage=https://github.com/kiki0-zz/QX_rules
 #!date=2026-11-14
 
-# 规则来源：奶思 fmz200 / wool_scripts，独立提取并收窄匹配。
-# https://github.com/fmz200/wool_scripts
-# 注意：m.ctrip.com 与携程共用，MITM 可能影响部分携程功能。
-# 遇到携程图片/功能异常时，可暂时关闭本插件进行排查。
+# 原规则来源：fmz200 / wool_scripts
+# 仅匹配 m.ctrip.com 的 tripAds 路径，不阻断整个携程域名。
+# 2026-11-14 修订：去掉旧版中可能漏匹配的 URL 末尾限制。
+# HTTPS 解密需开启并信任 Loon CA 证书。
+# 警告：m.ctrip.com 为携程共用域名，启用解密可能影响携程部分功能。
+# 如果开屏仍在，请在 Loon 活动记录中核对是否出现该 URL；
+# 不要在未抓到真实广告 URL 前扩大拦截。
 
 [Rewrite]
-# 智行火车票：开屏广告接口（只返回空 JSON 对象）
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/13916\/scjson\/tripAds(?:\?.*)?$ reject-dict
+# 智行火车票：旧版开屏广告接口（宽松前缀匹配）
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/13916\/scjson\/tripAds reject-dict
 
 [MitM]
-hostname = m.ctrip.com
+hostname = %APPEND% m.ctrip.com
