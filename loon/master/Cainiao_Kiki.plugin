@@ -1,44 +1,49 @@
 #!name=菜鸟去广告 · Kiki 极简版
-#!desc=精简菜鸟 App 首页营销、商品推荐、Banner 和个人中心广告；尽量保留查件、取件、寄件。
+#!desc=清理菜鸟首页活动横幅、搜索推荐、商品营销、快捷入口推广及个人中心广告；保留快递相关操作。
 #App链接=https://apps.apple.com/app/id951610982
-#!author=kiki0-zz（参考 Moli-X / 可莉、fmz200 / 奶思公开规则）
+#!author=kiki0-zz（参考 Moli-X、fmz200、ddgksf2013 公开规则）
 #!tag=去广告
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Cainiao.png
 #!homepage=https://github.com/kiki0-zz/QX_rules/blob/main/loon/master/Cainiao_Kiki.plugin
 #!loon_version=3.5.1(978)
 #!date=2026-11-14
 
-# v1.1 | 单文件 / 无远程 JS / 不修改分流、节点、DNS 或主配置
+# v1.2 | 更新：补齐合并首页接口、旧版大横幅、快捷入口广告、更多广告素材 ID。
+# 单文件、无外链 JS；不改主配置/分流/DNS。
+# 只处理已知广告字段，避免封整个菜鸟域名。
+# 某些权益/快捷入口会被隐藏；不是卸载或禁用 App 功能。
+# 前提：Loon 启用 HTTPS 解密和可信 CA 证书；关闭其他菜鸟去广告插件。
+# 快递列表内嵌营销文字可能走其他接口；未见响应样本前不删除包裹列表。
 # 参考：
 # https://github.com/Moli-X/Tool/blob/X/Loon/Plugin/Kelee/Cainiao_remove_ads.plugin
 # https://github.com/fmz200/wool_scripts/blob/main/Loon/plugin/split/partC/CaiNiaoGuoGuo.lpx
-# 注意：启用前先关闭现有菜鸟去广告插件，防止重复重写。
-# 需要 Loon 的 HTTPS 解密 / 信任证书；如发现业务异常，先停用本插件排查。
-# 不封整个 cainiao.com / taobao.com；仅处理已知广告接口与广告字段。
-# 菜鸟接口可能更新，无法保证所有营销元素都被去除。
+# https://github.com/ddgksf2013/Scripts/blob/main/cainiao_json.js
 
 [Rewrite]
-# A. 广告词、广告批量位、小程序商品推荐、营销问卷与底栏推广
-request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.adkeyword\.get\.cn/i then reject_dict(200)
-request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.(batch\.show\.v2|index)\.cn/i then reject_dict(200)
-request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbopen\.miniapp\.recommend\.cpc\.cn/i then reject_dict(200)
-request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbmensa\.research\.researchservice\.(acquire|event|close)\.cn/i then reject_dict(200)
-request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.tabbar\.marketing\.get\.cn/i then reject_dict(200)
-request if ${url} ~= /^https:\/\/netflow-mtop\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.index/i then reject_dict(200)
+# 1. 已知广告专用请求，返回空 JSON 而非阻断整个服务。
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.adkeyword\.get(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.(batch\.show\.v2|index)(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbopen\.miniapp\.recommend\.cpc(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbmensa\.research\.researchservice\.(acquire|event|close)(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.tabbar\.marketing\.get(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/netflow-mtop\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.index(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
+request if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.com\.cainiao\.(cnactivitycenter|cncreditmarket\.hit\.getactivityhit)(?:\.cn)?(?:[/?]|$)/i then reject_dict(200)
 
-# B. 新版页面引擎：清掉首页营销入口、搜索推荐、活动及会员横幅
-response if ${url} ~= /^https:\/\/(cn-acs\.m|e2e-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.app\.e2e\.engine\.page\.fetch/i then response.json.jq("del(.data.data.data.mainSearch.bizData.searchContents, .data.data.data.operationList, .data.data.banner, .data.data.activity, .data.data.vip, .data.data.data.banner, .data.data.data.activity, .data.data.data.vip)")
+# 2. E2E 新版页面：去搜索推广、营销卡片/活动/会员 Banner，保留订单和包裹区。
+response if ${url} ~= /^https:\/\/(cn-acs\.m|e2e-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.app\.e2e\.engine\.page\.fetch(?:\.cn)?(?:[/?]|$)/i then response.json.jq("del(.data.data.data.mainSearch.bizData.searchContents, .data.data.data.operationList, .data.data.data.banner, .data.data.data.activity, .data.data.data.vip, .data.data.banner, .data.data.activity, .data.data.vip, .data.data.marketing, .data.data.asset)")
 
-# C. 旧版首页：只删活动 Banner / 促销卡片与指定营销图标
-# 不清空整个 dataList，避免物流卡片丢失。
-response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.protocol\.homepage\.get\.cn/i then response.json.jq("if (.data.result.dataList | type) == \"array\" then .data.result.dataList |= map(select(((.type // \"\") | tostring | test(\"banner_area|promotion|activity_banner\")) | not) | if (((.type // \"\") | tostring | test(\"icons_scroll\")) and ((.bizData.items | type) == \"array\")) then .bizData.items |= map(. as $item | select(([\"618cjhb\",\"bgxq\",\"cncy\",\"cngy\",\"dtxb\",\"gjjf\",\"jkymd\",\"ljjq\",\"ttlhb\",\"xybg\"] | index(($item.key // \"\"))) == null)) else . end) else . end")
+# 3. 旧版独立首页：删大横幅与营销快捷入口，不动包裹列表。
+response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.protocol\.homepage\.get(?:\.cn)?(?:[/?]|$)/i then response.json.jq("def cleanCards: map( select(((.type // \"\") | tostring | test(\"banner_area|promotion|activity_banner|big_banner_area_v870|marketing\"; \"i\")) | not) | if ((.type // \"\" | tostring | test(\"icons_scroll\"; \"i\")) and (.bizData.items | type) == \"array\") then .bizData.items |= map(. as $item | select(([\"appCentreMore\", \"dzb\", \"kddh\", \"yfjsq\", \"jdj\"] | index(($item.key // \"\") | tostring)) != null)) else . end | if ((.type // \"\" | tostring | test(\"kingkong\"; \"i\")) and (.bizData.items | type) == \"array\") then .bizData.items |= map(select((tostring | test(\"物换物|万人团|欢乐赢红包|抽现金|红包乐园|裹酱积分|菜鸟回收|领福利\")) | not)) else . end | if (.bizData | type) == \"object\" then .bizData |= del(.searchContents, .adHotKeywords, .recommendWords) else . end ); if (.data.result.dataList | type) == \"array\" then .data.result.dataList |= cleanCards else . end")
 
-# D. 已知广告素材 ID：仅清理特定推荐位，不抹掉整个接口响应
-response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.mshow\.cn/i then response.json.jq("del(.data[\"10\"], .data[\"498\"], .data[\"1316\"], .data[\"1332\"], .data[\"1340\"], .data[\"1410\"], .data[\"1428\"], .data[\"1524\"], .data[\"1525\"], .data[\"1638\"], .data[\"1910\"])")
+# 4. 合并首页：菜鸟可能把旧首页数据打包成 0~3 个子响应，v1.1 未覆盖。
+response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.nbpresentation\.homepage\.merge\.get(?:\.cn)?(?:[/?]|$)/i then response.json.jq("def cleanCards: map( select(((.type // \"\") | tostring | test(\"banner_area|promotion|activity_banner|big_banner_area_v870|marketing\"; \"i\")) | not) | if ((.type // \"\" | tostring | test(\"icons_scroll\"; \"i\")) and (.bizData.items | type) == \"array\") then .bizData.items |= map(. as $item | select(([\"appCentreMore\", \"dzb\", \"kddh\", \"yfjsq\", \"jdj\"] | index(($item.key // \"\") | tostring)) != null)) else . end | if ((.type // \"\" | tostring | test(\"kingkong\"; \"i\")) and (.bizData.items | type) == \"array\") then .bizData.items |= map(select((tostring | test(\"物换物|万人团|欢乐赢红包|抽现金|红包乐园|裹酱积分|菜鸟回收|领福利\")) | not)) else . end | if (.bizData | type) == \"object\" then .bizData |= del(.searchContents, .adHotKeywords, .recommendWords) else . end ); if (.data | type) == \"object\" then .data |= with_entries( if ((.key | startswith(\"mtop.cainiao.nbpresentation.protocol.homepage.get.cn@\")) and (.value.data.result.dataList | type) == \"array\") then .value.data.result.dataList |= cleanCards else . end ) else . end")
 
-# E. 个人中心素材：去明确广告标记的横幅及娱乐推广
-response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.show\.cn/i then response.json.jq("if (.data.result | type) == \"array\" then .data.result |= map(select((.materialContentMapper.adItemDetail? == null) and (.materialContentMapper.group_id? != \"common_header_banner\") and (.materialContentMapper.group_id? != \"entertainment\") and (.materialContentMapper.group_id? != \"kuaishou_banner\"))) else . end")
-response if ${url} ~= /^https:\/\/(cn-acs\.m|e2e-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.app\.mine\.main/i then response.json.jq("del(.data.activity, .data.banner, .data.vip, .data.marketing)")
+# 5. 首页/详情广告素材位：只删已知营销 ID，保留未知字段。
+response if ${url} ~= /^https:\/\/(cn-acs\.m|netflow-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.mshow(?:\.cn)?(?:[/?]|$)/i then response.json.jq("del(.data[\"10\"], .data[\"205\"], .data[\"328\"], .data[\"366\"], .data[\"369\"], .data[\"498\"], .data[\"615\"], .data[\"616\"], .data[\"618\"], .data[\"727\"], .data[\"793\"], .data[\"954\"], .data[\"1275\"], .data[\"1308\"], .data[\"1316\"], .data[\"1332\"], .data[\"1340\"], .data[\"1391\"], .data[\"1410\"], .data[\"1428\"], .data[\"1524\"], .data[\"1525\"], .data[\"1638\"], .data[\"1910\"])")
+
+# 6. 我的页面：仅移除明确广告标记与娱乐类推广，保留其余内容。
+response if ${url} ~= /^https:\/\/cn-acs\.m\.cainiao\.com\/gw\/mtop\.cainiao\.guoguo\.nbnetflow\.ads\.show(?:\.cn)?(?:[/?]|$)/i then response.json.jq("if (.data.result | type) == \"array\" then .data.result |= map(select((.materialContentMapper.adItemDetail? == null) and (.materialContentMapper.group_id? != \"common_header_banner\") and (.materialContentMapper.group_id? != \"entertainment\") and (.materialContentMapper.group_id? != \"kuaishou_banner\"))) else . end")
+response if ${url} ~= /^https:\/\/(cn-acs\.m|e2e-mtop)\.cainiao\.com\/gw\/mtop\.cainiao\.app\.mine\.main(?:\.cn)?(?:[/?]|$)/i then response.json.jq("del(.data.activity, .data.banner, .data.vip, .data.marketing, .data.asset)")
 
 [MitM]
 hostname = cn-acs.m.cainiao.com, e2e-mtop.cainiao.com, netflow-mtop.cainiao.com
