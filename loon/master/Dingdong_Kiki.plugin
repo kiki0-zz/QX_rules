@@ -1,40 +1,60 @@
-#!name=叮咚买菜去广告 · Kiki 兼容版
-#!desc=保留折扣、优惠券及购物入口；针对开屏、启动弹窗和首页顶部大横幅做响应净化，不整页拦截。
+#!name=叮咚买菜去广告 · Kiki 兼容版 v1.2
+#!desc=优先稳定去除开屏、预加载和启动弹窗；保留折扣、领券、购物推荐及全部购物入口。
 #App链接=https://apps.apple.com/app/id768082524
-#!author=kiki0-zz（参考可莉、zirawell、奶思公开规则）
+#!author=kiki0-zz（参考可莉、奶思、zirawell、qsoyq 和社区开屏规则）
 #!tag=去广告
 #!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/DingdongMaicai.png
 #!homepage=https://github.com/kiki0-zz/QX_rules/blob/main/loon/master/Dingdong_Kiki.plugin
 #!loon_version=3.5.1(978)
 #!date=2026-11-14
 
-# Kiki Dingdong v1.1 | 定点净化开屏/启动弹窗/顶部横幅 / 保留折扣与促销 / 无远程 JS
-# 目标：移除开屏广告、启动后营销弹窗、首页顶部大横幅。
-# 特别保留：首页「满29元领券包」、会员折扣、限时优惠、搜索热词、
-# 商品推荐、购物车、订单、我的页面全部入口、底部导航及领券路径。
-# 与旧版区别：不 REJECT 业务请求，不删整页数据、功能入口和购物推荐，
-# 不拦 CDN/追踪/HTTPDNS 域名，也不拦 queryMyPage/homeFlowDetail。
-# v1.1 添加两个“广告专用接口”的响应净化：只清空广告 payload，
-# 保留原响应 code / message / success 等顶层字段，降低错误弹窗概率。
-# 注意：清空广告响应的数据结构是根据公开接口用途设计的，尚未抓取
-# 你的当前 App 响应验证；若有网络弹窗，应停用并查看 Loon 请求记录。
-# 如果旧开屏素材已缓存，可能要清除 App 缓存后才会完全消失。
-# 启用前关闭旧可莉/其他叮咚去广告插件，避免多套重写互相影响。
+# Kiki Dingdong v1.2 | 开屏预加载修复 / 请求阶段拦截 / 保留购物完整性
+# 本版针对：重装后首次没有开屏、第二次启动重新出现开屏广告。
+# 和 v1.1 不同：不等广告接口返回 JSON，再删除 .data；
+# 直接给明确广告接口提供空 JSON，避免广告数据被下载到本地缓存。
+# 已知接口：/advert/startUpScreen、/advert/getPreloadAd、/advert/getAd。
+# 广告素材兜底只匹配公开来源中识别的开屏图片尺寸，不拦整个 CDN。
+# 注意：iPhone/不同版本可能换素材尺寸；本规则不能保证所有广告。
 #
-# 参考（只借鉴已知接口，不沿用激进的 REJECT）：
+# 保留：折扣、满减、领券包、购物优惠、VIP 价格、分类、搜索、推荐商品、
+#       商品详情、购物车、订单、我的页面和底部导航。
+# 不拦：vip/getVipAd、homeApi/homeFlowDetail、homeApi/userLike、
+#       homeApi/queryMyPage、order/getRecommend、cart/vipGuide、
+#       user/queryMyPage；不拦跟踪/CDN/HTTPDNS 整域。
+# 不调用任何第三方 JS，不修改你的 Loon 主配置、代理、DNS 或策略组。
+# 只启用这一个叮咚去广告插件；必须开启 Loon HTTPS 解密与 CA 信任。
+#
+# 参考来源：
 # https://github.com/fkingikelee/fkikelee/blob/main/lpx/DingdongMaicai_remove_ads.lpx
 # https://github.com/fmz200/wool_scripts/blob/main/Loon/plugin/split/partD/DingDongMaiCai.lpx
-# https://github.com/zirawell/R-Store/blob/main/Res/Scripts/AntiAd/ddxq.js
+# https://github.com/qsoyq/shell/blob/main/config/stash/override/ad/ddxq.stoverride
+# https://github.com/qsoyq/shell/blob/main/config/stash/override/FuckLaunchScreen.stoverride
 
 [Rewrite]
-# 1. 独立开屏广告接口：让服务端业务状态保持原样，只清空广告内容。
-response if ${url} ~= /^https?:\/\/maicai\.api\.ddxq\.mobi\/advert\//i then response.json.jq("if (.data | type) == \"array\" then .data = [] elif (.data | type) == \"object\" then .data = {} else . end")
+# 1. 开屏广告 + 预加载广告：
+# 覆盖已知三个接口及同一 advert/ 路径下的新广告请求。
+# 直接返回 HTTP 200 + {}，不把请求交给服务端，避免下次启动展示缓存。
+request if ${url} ~= /^https?:\/\/maicai\.api\.ddxq\.mobi\/advert\//i then reject_dict(200)
 
-# 2. 打开首页时的弹窗广告接口：不 REJECT，不碰购物券/折扣接口。
-response if ${url} ~= /^https?:\/\/maicai\.api\.ddxq\.mobi\/homeApi\/getHomeAdPop(?:[/?]|$)/i then response.json.jq("if (.data | type) == \"array\" then .data = [] elif (.data | type) == \"object\" then .data = {} else . end")
+# 2. 首页启动营销弹窗：
+# 仅专用弹窗接口返回空对象；折扣商品、领券、任务奖励接口保持正常。
+request if ${url} ~= /^https?:\/\/maicai\.api\.ddxq\.mobi\/homeApi\/getHomeAdPop(?:[/?]|$)/i then reject_dict(200)
 
-# 3. 首页上方「晚间市集」等独立营销横幅和悬浮位；
-# 注意不删首页分类、优惠券活动或商品推荐列表。
+# 3. 已有广告素材缓存兜底（窄范围）：
+# 仅公开规则记录的 compass-admin 目录 + 750x1624 开屏图，返回 1x1 图片。
+# 不影响 pub.ddimg.mobi 下的其他尺寸商品图和正常图片。
+request if ${url} ~= /^https:\/\/pub\.ddimg\.mobi\/compass-admin\/[\w-]+\.(png|jpe?g)\?(height=1624&width=750|width=750&height=1624)(?:&|$)/i then reject_img(200)
+
+# 4. 首页顶部单独广告位/悬浮层：
+# 只移除两个原有广告字段，不删首页 list、券包和商品。
 response if ${url} ~= /^https?:\/\/maicai\.api\.ddxq\.mobi\/homeApi\/newDetails(?:[/?]|$)/i then response.json.delete(["data.top_advert_data", "data.suspension"])
+
+# 不启用以下旧版危险处理：
+# - 整页拒绝 queryMyPage、购物推荐/折扣接口
+# - 清空优惠券、会员区、搜索结果、商品推荐和首页活动 list
+# - 大范围拦截 trackercollect.ddxq.mobi / ddfs-public.ddimg.mobi
+# 排查：若仍有开屏，请记录两次启动时的 Loon 请求，并确认 advert/ 和
+# pub.ddimg.mobi 是否命中 Rewrite；日志未验证之前不扩大广告素材拦截。
+
 [MitM]
-hostname = maicai.api.ddxq.mobi
+hostname = maicai.api.ddxq.mobi, pub.ddimg.mobi
