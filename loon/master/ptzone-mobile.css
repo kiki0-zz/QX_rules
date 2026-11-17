@@ -283,3 +283,54 @@
 .pzm-mobile .pzm-home-section>h2{height:auto!important;background:transparent!important;color:#254f5d;padding:0!important}
 @media(max-width:360px){.pzm-mobile .pzm-quick-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.pzm-mobile .pzm-quick-filters>label:last-child{grid-column:1/-1}}
 
+/* 0.2.1: one account card layout in the global panel and My page. */
+.pzm-mobile #pzm-account-panel{display:none}
+.pzm-mobile.pzm-account-open #pzm-account-panel{display:block}
+.pzm-mobile.pzm-account-open #info_block.pzm-account-source{display:none!important}
+.pzm-mobile.pzm-account-open #info_block.pzm-account-source.pzm-account-raw-open{display:block!important}
+.pzm-mobile .pzm-account-panel,.pzm-mobile .pzm-account-dashboard{max-width:100%;min-width:0;margin:10px 0 16px;padding:14px;background:#fff;border:1px solid #d5e4e8;border-radius:14px;text-align:left;font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#233541}
+.pzm-mobile .pzm-account-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;margin:0 0 10px}
+.pzm-mobile .pzm-account-heading>a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;text-decoration:none}
+.pzm-mobile .pzm-account-heading>.pzm-account-name{min-width:0;font-size:19px;font-weight:700;overflow-wrap:anywhere}
+.pzm-mobile .pzm-account-heading>a:not(.pzm-account-name){flex-shrink:0;color:#58727b}
+.pzm-mobile .pzm-account-stats{gap:8px;margin-bottom:10px}
+.pzm-mobile .pzm-account-stats dd{font-size:18px;line-height:1.5;font-variant-numeric:tabular-nums}
+.pzm-mobile .pzm-account-activity{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.pzm-mobile .pzm-account-activity>span{padding:3px 8px;border-radius:6px;background:#f4f7f8;font-size:12px;color:#617985}
+.pzm-mobile .pzm-account-activity>[hidden]{display:none!important}
+.pzm-mobile .pzm-account-links{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.pzm-mobile .pzm-account-links>a{min-width:0;padding:8px 3px;min-height:48px;font-size:13px;line-height:1.6;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.pzm-mobile .pzm-account-more{margin-top:12px;border-top:1px solid #e4ecef}
+.pzm-mobile .pzm-account-more>summary{display:list-item;min-height:44px;padding:11px 2px;cursor:pointer;font-size:13px;color:#5e747f}
+.pzm-mobile .pzm-account-more>nav{display:none}
+.pzm-mobile .pzm-account-more[open]>nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 6px}
+.pzm-mobile .pzm-account-extra>a{display:flex;align-items:center;min-height:44px;font-size:13px;text-decoration:none}
+.pzm-mobile .pzm-account-more>button{display:none}
+.pzm-mobile .pzm-account-more[open]>button{display:block;background:#f3f7f8;color:#58727b;border:1px solid #d8e4e8;font-size:13px!important;width:100%}
+.pzm-mobile .pzm-search-choice-cell{font-size:0!important}
+.pzm-mobile .pzm-search-old-label{display:none!important}
+.pzm-mobile .pzm-search-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px;padding:4px 0;font-size:14px;line-height:1.6;text-align:left}
+.pzm-mobile .pzm-search-options>label{display:block;min-width:0;font-size:13px;color:#617985}
+.pzm-mobile .pzm-search-options>label>span{display:block;margin-bottom:3px}
+.pzm-mobile .pzm-search-options select{display:block;min-width:0;width:100%!important;border:1px solid #cbdde3;background:#f6fafb;padding:8px 5px}
+.pzm-mobile .pzm-search-match-hint{grid-column:1/-1;margin:2px 0 0;font-size:12px;color:#71848d;line-height:1.6}
+.pzm-mobile .pzm-attendance-card{max-width:100%;margin:18px 0;padding:14px;background:#fff;border:1px solid #d8e4e8;border-radius:12px;text-align:left}
+.pzm-mobile #outer .pzm-attendance-card>h2{margin:0 0 6px;font-size:17px!important}
+.pzm-mobile ul.pzm-attendance-rules,.pzm-mobile ol.pzm-attendance-milestones{margin:0!important;padding:0!important;list-style:none!important;text-align:left!important;font-size:14px;line-height:1.75}
+.pzm-mobile .pzm-attendance-rules>li,.pzm-mobile .pzm-attendance-milestones>li{list-style:none!important;max-width:100%;margin:0!important;padding:10px 0;text-align:left!important}
+.pzm-mobile .pzm-attendance-basic{border-bottom:1px solid #e6edef}
+.pzm-mobile .pzm-attendance-rules>.pzm-attendance-bonus-group{padding:4px 0 0}
+.pzm-mobile .pzm-attendance-milestones>.pzm-attendance-milestone{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid #edf2f4}
+.pzm-mobile .pzm-attendance-milestone:last-child{border-bottom:0}
+.pzm-mobile .pzm-rule-day{min-width:0;font-size:14px;color:#526d77}
+.pzm-mobile .pzm-rule-reward{flex-shrink:0;font-size:14px;color:#126a76;text-align:right;font-variant-numeric:tabular-nums}
+.pzm-mobile .pzm-rule-original{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.pzm-mobile #outer h2{height:auto!important;background:transparent!important;border:0!important;padding:0!important;color:#254f5d}
+.pzm-mobile .pzm-browser-advice{display:block;text-align:left!important;font-size:12px;line-height:2;color:#6a7b85}
+.pzm-mobile .pzm-browser-advice a{display:inline-flex;align-items:center;gap:4px;min-height:28px;font-size:12px;white-space:nowrap;vertical-align:middle}
+.pzm-mobile img.pzm-footer-icon{display:inline-block;width:22px!important;height:22px!important;max-width:22px!important;max-height:22px!important;object-fit:contain;vertical-align:middle}
+.pzm-mobile img.pzm-footer-brand{width:90px!important;max-width:90px!important;height:auto!important;margin:8px 0}
+.pzm-mobile #footer{margin:18px 10px 24px;text-align:center;font-size:12px;line-height:1.6}
+.pzm-mobile #footer>div{margin:0!important;font-size:12px;line-height:1.6;text-align:center!important}
+.pzm-mobile .pzm-footer-diagnostics{display:none!important}
+

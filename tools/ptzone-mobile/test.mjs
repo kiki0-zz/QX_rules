@@ -59,20 +59,21 @@ try{
   await page.locator('[data-pzm-home-section=chat] .pzm-section-toggle').click();ok(await page.locator('#chat-text').isVisible(),'Chat expands with its original input');
   equal(await page.locator('#chat-text').inputValue(),'草稿','Chat draft preserved');
   await open('forums.php');equal(await page.locator('.pzm-record-section').count(),2,'Both forum section headers kept');equal(await page.locator('.pzm-record').count(),2,'Section header is never a post card');await restore();
-  await open('usercp.php');equal(await page.locator('.pzm-account-stats>div').count(),4,'My account contains four stats');equal(await page.locator('.pzm-account-links>a').count(),5,'Only native account links are used');await restore();
+  await open('usercp.php');equal(await page.locator('.pzm-account-dashboard .pzm-account-stats>div').count(),4,'My account contains four stats');equal(await page.locator('.pzm-account-dashboard .pzm-account-links>a').count(),6,'Only native account links are used');await restore();
   await open('usercp.php?action=personal');equal(await page.locator('.pzm-account-dashboard').count(),0,'Settings forms do not get a dashboard');equal(await page.locator('input[name=title]').inputValue(),'原有设置','Settings value retained');await restore();
   await open('torrents.php?partial=1');ok(await page.locator('.pzm-partial-notice').isVisible(),'Partial-page notice identifies missing tail without inventing records');equal(await page.locator('.pzm-torrent').count(),10,'Partial page keeps its actual 10 rows');
   await open('torrents.php');await page.locator('.pzm-torrents>tbody>tr').first().locator('img[alt=seeders]').evaluate(e=>{e.alt='unknown';});await page.waitForFunction(()=>window.__ptzoneMobile.active===false);checks++;
   ok(await page.locator('.pzm-status').isVisible(),'Fallback reason stays visible');equal(await page.getByRole('button',{name:'菜单',exact:true}).isVisible(),false,'Fallback hides inactive menu');
   for(const width of [320,375,390,430]) {
     await page.setViewportSize({width,height:844});
-    for(const view of ['index.php','torrents.php','torrents.php?page=1','torrents.php?partial=1','details.php?id=1','forums.php','usercp.php']){
+    for(const view of ['index.php','torrents.php','torrents.php?page=1','torrents.php?partial=1','details.php?id=1','forums.php','usercp.php','attendance.php']){
       await open(view);
-      const sizes=await page.evaluate(()=>({viewport:innerWidth,width:document.documentElement.scrollWidth,overflow:Array.from(document.querySelectorAll('.pzm-torrent,.pzm-pagination,.pzm-quick-filters,.pzm-account-dashboard')).filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>e.className)}));
+      await page.getByRole('button',{name:'账户信息',exact:true}).click();
+      const sizes=await page.evaluate(()=>({viewport:innerWidth,width:document.documentElement.scrollWidth,overflow:Array.from(document.querySelectorAll('.pzm-torrent,.pzm-pagination,.pzm-quick-filters,.pzm-account-dashboard,#pzm-account-panel,.pzm-search-options,.pzm-attendance-card')).filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>e.className)}));
       ok(sizes.width<=sizes.viewport+1,view+' at '+width+' has no document overflow: '+JSON.stringify(sizes));equal(sizes.overflow,[],view+' has no card/pager overflow');
       if(width===390&&!view.includes('?page'))await page.screenshot({path:path.join(output,view.split('?')[0].replace('.php','')+(view.includes('partial')?'-partial':'')+'.png'),fullPage:false});
     }
   }
   equal(errors,[],'No browser exceptions');
-  console.log(JSON.stringify({checks,viewportChecks:28,screenshots:output,result:'passed'}));
+  console.log(JSON.stringify({checks,viewportChecks:32,screenshots:output,result:'passed'}));
 }finally{await browser.close();}
