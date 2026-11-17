@@ -13,16 +13,18 @@ const {fixture}=makeFixtures(source);
 let count=0;
 function ok(x,msg){assert.ok(x,msg);count++;}
 function equal(a,b,msg){assert.deepEqual(a,b,msg);count++;}
-const properties={rows:{get(){return this.tagName==='TABLE'?Array.from(this.querySelectorAll(':scope>tbody>tr,:scope>thead>tr,:scope>tfoot>tr,:scope>tr')):undefined;}},cells:{get(){return this.tagName==='TR'?Array.from(this.children).filter(e=>e.tagName==='TD'||e.tagName==='TH'):undefined;}},colSpan:{get(){return Number(this.getAttribute('colspan')||1);}}};
+const properties={rows:{get(){return this.tagName==='TABLE'?Array.from(this.querySelectorAll(':scope>tbody>tr,:scope>thead>tr,:scope>tfoot>tr,:scope>tr')):undefined;}},tBodies:{get(){return this.tagName==='TABLE'?Array.from(this.children).filter(e=>e.tagName==='TBODY'):undefined;}},cells:{get(){return this.tagName==='TR'?Array.from(this.children).filter(e=>e.tagName==='TD'||e.tagName==='TH'):undefined;}},colSpan:{get(){return Number(this.getAttribute('colspan')||1);}}};
 for(const [key,value]of Object.entries(properties))Object.defineProperty(HTMLElement.prototype,key,{...value,configurable:true});
 HTMLElement.prototype.click=function(){const event=new Event('click',{bubbles:true,cancelable:true});event.button=0;this.dispatchEvent(event);};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-function boot(view){
-  const location=new URL('https://ptzone.xyz/'+view),{document,window:domWindow}=parseHTML(fixture(location));
-  for(const table of Array.from(document.querySelectorAll('table'))){const rows=Array.from(table.children).filter(e=>e.tagName==='TR');if(rows.length){const body=document.createElement('tbody');table.insertBefore(body,rows[0]);rows.forEach(r=>body.appendChild(r));}}
+function normalizeTables(document){for(const table of Array.from(document.querySelectorAll('table'))){const rows=Array.from(table.children).filter(e=>e.tagName==='TR');if(rows.length){const body=document.createElement('tbody');table.insertBefore(body,rows[0]);rows.forEach(r=>body.appendChild(r));}}return document;}
+function boot(view,options={}){
+  const location=new URL('https://ptzone.xyz/'+view),{document,window:domWindow}=parseHTML(options.html||fixture(location));
+  normalizeTables(document);
   document.readyState='complete';
   const storage=new Map(),eventTarget=new domWindow.EventTarget();
   const window={document,getSelection:()=>({toString:()=>''}),addEventListener:(...a)=>eventTarget.addEventListener(...a)};
+  if(options.bookmark)window.bookmark=options.bookmark;
   // Linkedom reports the observed root for childList mutations, whereas DOM
   // browsers report the changed parent. Normalize added-node records to that
   // parent so account text changes exercise the browser's callback semantics.
@@ -31,7 +33,8 @@ function boot(view){
     observe(...args){this.observer.observe(...args);}
     disconnect(){this.observer.disconnect();}
   }
-  const context=vm.createContext({window,document,location,navigator:{userAgent:'Mozilla/5.0 iPhone'},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},URL,URLSearchParams,MutationObserver:BrowserMutationObserver,setTimeout,clearTimeout});
+  class BrowserDOMParser {parseFromString(html){return normalizeTables(parseHTML(html).document);}}
+  const context=vm.createContext({window,document,location,navigator:{userAgent:'Mozilla/5.0 iPhone'},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},URL,URLSearchParams,MutationObserver:BrowserMutationObserver,DOMParser:BrowserDOMParser,AbortController,fetch:options.fetch,setTimeout,clearTimeout});
   const nativeForm=document.querySelector('form[name=searchbox]'),nativeSelect=document.querySelector('select[name=spstate]'),bookmark=document.querySelector('a[id^=bookmark]'),nativeMode=document.querySelector('select[name=search_mode]');
   let downloads=0;
   for(const a of document.querySelectorAll('[data-test-download]'))a.addEventListener('click',e=>{e.preventDefault();downloads++;});
@@ -68,6 +71,64 @@ for(const view of ['index.php','torrents.php','torrents.php?page=1','torrents.ph
   if(view==='torrents.php'){d.querySelector('.pzm-description-toggle').click();equal(d.querySelectorAll('.pzm-description-open').length,1,'Description expand');equal(d.querySelector('.pzm-pagination a').getAttribute('href'),'?search=HDR&spstate=2&page=1','Native pager conditions preserved');d.querySelector('.pzm-page-select').click();ok(d.querySelector('.pzm-pager-open'),'Native page range expansion');d.querySelector('.pzm-sort img[alt=seeders]').alt='unknown';await delay(160);ok(x.window.__ptzoneMobile.active===false,'Unknown header fallback');ok(d.querySelector('.pzm-status').textContent.includes('原版'),'Fallback reason displayed');ok(Array.from(d.querySelectorAll('button')).find(b=>b.textContent==='菜单').hidden,'Inactive menu hidden');}
   if(view==='index.php'){d.querySelector('[data-pzm-home-section=chat] button').click();ok(!d.querySelector('[data-pzm-home-section=chat]').classList.contains('pzm-home-folded'),'Chat expands');equal(d.querySelector('#chat-text').getAttribute('value'),'草稿','Draft preserved');}
   x.window.__ptzoneMobile.restore();
+}
+// Native PHP can terminate before the rating/action/statistic cells. Model
+// those exact interrupted rows and real pageSize/zero-based page semantics.
+const templateDoc=normalizeTables(parseHTML(fixture(new URL('https://ptzone.xyz/torrents.php'))).document);
+const templateTable=templateDoc.querySelector('table.torrents');
+const templateHeader=templateTable.rows[0].outerHTML,templateRow=templateTable.rows[1];
+const brokenIds=new Set([130,174,201,214,247]);
+function serverPage(offset,size){
+  const rows=[];let cut=false;
+  for(let i=0;i<size;i++){
+    const id=offset+i+1,row=templateRow.cloneNode(true);
+    row.querySelectorAll('a[href]').forEach(a=>{const href=a.getAttribute('href');if(/(?:details|download|viewsnatches)\.php\?/.test(href))a.setAttribute('href',href.replace(/\bid=\d+/, 'id='+id));});
+    row.querySelector('table.torrentname a[href*="details.php?"]').textContent='Native record '+id;
+    row.querySelector('img.nexus-lazy-load').setAttribute('data-src','https://images.example.test/'+id+'.jpg');
+    const bookmark=row.querySelector('a[id^=bookmark]');bookmark.id='bookmark'+i;bookmark.setAttribute('href','javascript: bookmark('+id+','+i+');');bookmark.removeAttribute('onclick');
+    if(brokenIds.has(id)){while(row.cells.length>2)row.cells[row.cells.length-1].remove();const nested=row.querySelector('table.torrentname');while(nested.rows[0].cells.length>2)nested.rows[0].cells[nested.rows[0].cells.length-1].remove();cut=true;}
+    rows.push(row.outerHTML);if(cut)break;
+  }
+  const base=normalizeTables(parseHTML(fixture(new URL('https://ptzone.xyz/torrents.php'))).document);
+  const outer=base.getElementById('outer');outer.innerHTML='<p><font class="gray">'+(offset+1)+' - '+(offset+size)+'</font> <a href="?page=1">下一頁 &gt;&gt;</a></p><table class="torrents"><tbody>'+templateHeader+rows.join('')+'</tbody></table>';
+  if(cut)base.getElementById('footer').remove();
+  return base.documentElement.outerHTML;
+}
+async function until(condition,message){for(let n=0;n<200;n++){if(condition())return;await delay(10);}throw new Error(message);}
+for(let page=0;page<5;page++){
+  const calls=[];
+  const get=async(url,options)=>{
+    const u=new URL(url),size=Number(u.searchParams.get('pageSize')),offset=Number(u.searchParams.get('page'))*size;
+    calls.push({offset,size,notnewword:u.searchParams.get('notnewword')});equal(u.origin,'https://ptzone.xyz','Recovery uses only the original site');equal(u.searchParams.get('spstate'),'2','Promotion filter is retained');equal(u.searchParams.get('search'),'HDR','Search query is retained');equal(options.credentials,'same-origin','No manual cookie or credential extraction');
+    return {ok:true,text:async()=>serverPage(offset,size)};
+  };
+  let bookmarkCalls=0;
+  const x=boot('torrents.php?incldead=1&spstate=2&search=HDR&page='+page,{html:serverPage(page*50,50),fetch:get,bookmark:page===2?()=>{bookmarkCalls++;}:undefined}),d=x.document;
+  if(page>=2)await until(()=>d.querySelector('.pzm-partial-notice p')?.textContent.startsWith('已补齐'),'Recovery did not complete on page '+(page+1));
+  else await delay(10);
+  const actual=Array.from(d.querySelectorAll('tr.pzm-torrent .pzm-name-title>a[href*="details.php?"]'),a=>Number(new URL(a.getAttribute('href'),'https://ptzone.xyz').searchParams.get('id')));
+  equal(actual,Array.from({length:50},(_,i)=>page*50+i+1),'Page '+(page+1)+' has exactly its original 50 records, in order');
+  equal(new Set(actual).size,50,'Recovered page has no duplicated records');
+  if(page>=2)equal(Array.from(d.querySelectorAll('.pzm-recovery-pagination a'),a=>a.getAttribute('href')),Array.from(d.querySelectorAll('nav.pzm-pagination:not(.pzm-recovery-pagination) a'),a=>a.getAttribute('href')),'Recovered pages mirror native navigation at the bottom');
+  if(page>=2){const imported=d.querySelector('tr.pzm-torrent:not([data-pzm-source-missing]) a[id^=bookmark]');ok(imported.getAttribute('href').startsWith(page===2?'javascript:':'details.php?'),'Available native bookmark helper is preserved; absent helper opens native details');equal(d.querySelector('tr.pzm-torrent img.nexus-lazy-load').getAttribute('loading'),'lazy','Recovered page initializes lazy native posters without missing footer scripts');equal(bookmarkCalls,0,'Recovery never automatically bookmarks a resource');}
+  const ids=Array.from(d.querySelectorAll('tr.pzm-torrent a[id^=bookmark]'),a=>a.id);equal(new Set(ids).size,ids.length,'Imported bookmark controls have unique IDs');
+  for(const row of d.querySelectorAll('tr[data-pzm-source-missing]')){equal(row.querySelector('[data-pzm-field=size]').textContent,'—','Missing source statistics are not replaced with invented zeroes');ok(row.querySelector('.pzm-source-missing-note'),'Unavailable source fields explicitly labelled');ok(row.querySelector('.pzm-actions a[href*="download.php"]'),'Incomplete records retain a native-format download destination');}
+  ok(calls.length<=50,'Recovery has a bounded request budget');if(page<2)equal(calls.length,0,'Complete native pages do not send recovery requests');
+  if(page>=2)ok(calls.every(call=>call.notnewword==='1'),'Fragment reads do not repeatedly submit the query as a new hot search');
+  x.window.__ptzoneMobile.restore();equal(d.querySelector('table.mainouter').outerHTML,x.before,'Recovery removes all imported records when restoring the native page');
+}
+{
+  let calls=0;
+  const x=boot('torrents.php?page=2',{html:serverPage(100,50),fetch:async()=>{calls++;return {ok:true,text:async()=>'<html><body>Login required</body></html>'};}});
+  await until(()=>x.document.querySelector('.pzm-partial-notice p')?.textContent.includes('登录状态'),'Login-change recovery did not stop');
+  equal(calls,1,'Login/template failure stops instead of retrying in a loop');
+  x.window.__ptzoneMobile.restore();equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Failed recovery remains fully reversible');
+}
+{
+  let calls=0,aborted=false;
+  const x=boot('torrents.php?page=2',{html:serverPage(100,50),fetch:(url,options)=>{calls++;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>{aborted=true;reject(new Error('Aborted'));},{once:true}));}});
+  await until(()=>calls===1,'Recovery request did not start');x.window.__ptzoneMobile.restore();await delay(10);
+  ok(aborted,'Switching to original aborts pending recovery');equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Pending recovery cannot mutate a restored page');
 }
 const ua='Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
 // Response guards are run independently of the DOM renderer.

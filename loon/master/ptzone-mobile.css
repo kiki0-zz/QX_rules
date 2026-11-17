@@ -334,3 +334,25 @@
 .pzm-mobile #footer>div{margin:0!important;font-size:12px;line-height:1.6;text-align:center!important}
 .pzm-mobile .pzm-footer-diagnostics{display:none!important}
 
+/* Incomplete native HTML: preserve originals for restore, show only recovered
+   records. Missing fields stay explicit; no synthetic ratings or zero counts. */
+.pzm-mobile tr[data-pzm-recovery-original]{display:none!important}
+.pzm-mobile .pzm-source-missing-note{display:block;margin:5px 0 2px;font-size:12px;line-height:1.5;color:#866429}
+.pzm-mobile .pzm-partial-notice>button{margin:0 8px 4px 0;font-size:14px!important}
+.pzm-mobile .pzm-partial-notice>[hidden]{display:none!important}
+.pzm-mobile .pzm-recovery-pagination>.pzm-page-select{display:flex;align-items:center;justify-content:center;min-height:44px;padding:6px;font-size:12px;color:#45606d}
+/* FullCalendar owns fixed-height absolute scrollers. Expand its native month
+   grid in document flow instead of clipping or requiring an inner scroll. */
+.pzm-mobile #calendar .fc-view-harness{height:auto!important;min-height:0!important}
+.pzm-mobile #calendar .fc-view-harness-active>.fc-view{position:relative!important;inset:auto!important;width:100%!important;height:auto!important}
+.pzm-mobile #calendar .fc-scrollgrid,.pzm-mobile #calendar .fc-scrollgrid-sync-table{height:auto!important;min-height:0!important}
+.pzm-mobile #calendar .fc-scroller-harness,.pzm-mobile #calendar .fc-scroller{height:auto!important;max-height:none!important;overflow:visible!important}
+.pzm-mobile #calendar .fc-scroller-liquid-absolute{position:relative!important;inset:auto!important}
+.pzm-mobile #calendar .fc-daygrid-body{width:100%!important;min-height:0!important}
+.pzm-mobile #calendar .fc-daygrid-day-frame{min-height:56px}
+.pzm-mobile #calendar .fc-daygrid-day-number{min-height:28px!important;min-width:0!important;padding:3px 4px;font-size:13px;line-height:1.4}
+.pzm-mobile #calendar .fc-daygrid-day-events{min-height:20px!important;margin:0 2px 3px}
+.pzm-mobile #calendar .fc-daygrid-event{margin:1px 0;font-size:12px;line-height:1.4}
+.pzm-mobile #calendar .fc-event-title{font-size:12px;line-height:1.4}
+.pzm-mobile #calendar .fc-toolbar-title{font-size:18px!important}
+
