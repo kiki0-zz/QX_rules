@@ -1,0 +1,9 @@
+#!name = MacNAS 家庭直连
+#!desc = 在家庭 Wi-Fi 下使用 Mac mini 的 DNS，直连 nas.kikinode.top。Mac 关机时请关闭插件。
+
+[Host]
+ssid:TP-LINK_777 = server:192.168.0.104
+ssid:TP-LINK_5G_777 = server:192.168.0.104
+
+[Rule]
+DOMAIN,nas.kikinode.top,DIRECT
