@@ -1,0 +1,17 @@
+#!name = Antigravity 界面轻量汉化 (KK版)
+#!desc = 仅汉化 Antigravity 固定菜单与设置项，严格跳过代码块、输入框与脚本标签
+#!author = kiki
+#!tag = 汉化,工具
+#!homepage = https://github.com/kiki0-zz/QX_rules/blob/main/loon/master/Antigravity_Zh_Kiki.plugin
+#!loon_version = 3.5.1(978)
+#!date = 2026-11-24
+
+[Rewrite]
+# 避免浏览器命中 304 缓存导致无响应体可改写（仅针对 HTML 文档请求）
+request if ${request.method} == "GET" && ${url} ~= /^https:\/\/antigravity\.google\.com(?:\/|\?|$)/i && (${request.header['Sec-Fetch-Dest']} == "document" || ${request.header['Accept']} ~= /text\/html/i) then request.header.del(["If-None-Match", "If-Modified-Since"])
+
+# 仅对 200 状态码的 HTML 文档移除 CSP 并注入轻量汉化脚本
+response if ${request.method} == "GET" && ${url} ~= /^https:\/\/antigravity\.google\.com(?:\/|\?|$)/i && ${response.status} == 200 && ${response.header['Content-Type']} ~= /^text\/html(?:\s*;|$)/i then response.header.del("Content-Security-Policy") | response.body.replace(/<\/body>(?![\s\S]*<\/body>)/i, "<script>(function(){if(window.__agZh)return;window.__agZh=1;const dict=new Map([['Customizations','自定义配置'],['Remote Control','远程控制'],['Projects','项目仓库'],['Conversation steps','对话步骤显示'],['Choose how much detail is shown during a conversation.','选择对话过程中显示的执行细节程度。'],['Default','默认'],['Verbose','详细'],['Appearance','外观设置'],['Font','字体'],['Light Theme','浅色主题'],['Dark Theme','深色主题'],['Preset','预设主题'],['Background','背景色'],['Foreground','前景色'],['Accent','强调色'],['Code Preview','代码预览']]);const skip='pre,code,textarea,input,script,style,noscript,template,[contenteditable]:not([contenteditable=false])';const tr=(n)=>{if(!n||n.nodeType!==3)return;const p=n.parentElement;if(!p||p.closest(skip))return;const raw=n.nodeValue;const t=raw.trim();if(!t||!dict.has(t))return;const i=raw.indexOf(t);n.nodeValue=raw.slice(0,i)+dict.get(t)+raw.slice(i+t.length);};const walk=(root)=>{if(!root)return;if(root.nodeType===3){tr(root);return;}if(root.nodeType!==1||root.closest(skip))return;const w=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,{acceptNode:(n)=>{if(n.nodeType===1)return n.matches(skip)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_SKIP;const t=n.nodeValue.trim();return dict.has(t)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP;}});let n;const list=[];while((n=w.nextNode()))list.push(n);list.forEach(tr);};const run=()=>{walk(document.body);if(document.documentElement){new MutationObserver((ms)=>{for(const m of ms){if(m.type==='characterData'){tr(m.target);}else{for(const node of m.addedNodes)walk(node);}}}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}};if(document.body)run();else document.addEventListener('DOMContentLoaded',run,{once:true});})();</script></body>")
+
+[Mitm]
+hostname = antigravity.google.com
