@@ -1,0 +1,9 @@
+#!name = Gemini 桌面版（KK版）
+#!desc = 仅修改 Gemini 网页请求的 User-Agent 为 macOS Safari，尝试加载桌面版，兼容旧版 Loon，不改变代理分流。
+#!author = kiki
+
+[Rewrite]
+^https:\/\/gemini\.google\.com(?:\/|$) header-replace User-Agent Mozilla/5.0\x20(Macintosh;\x20Intel\x20Mac\x20OS\x20X\x2010_15_7)\x20AppleWebKit/605.1.15\x20(KHTML,\x20like\x20Gecko)\x20Version/18.0\x20Safari/605.1.15
+
+[MITM]
+hostname = gemini.google.com
