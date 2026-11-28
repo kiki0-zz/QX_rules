@@ -78,15 +78,15 @@ const templateDoc=normalizeTables(parseHTML(fixture(new URL('https://ptzone.xyz/
 const templateTable=templateDoc.querySelector('table.torrents');
 const templateHeader=templateTable.rows[0].outerHTML,templateRow=templateTable.rows[1];
 const brokenIds=new Set([130,174,201,214,247]);
-function serverPage(offset,size){
+function serverPage(offset,size,{cutIds=brokenIds,shift=0}={}){
   const rows=[];let cut=false;
   for(let i=0;i<size;i++){
-    const id=offset+i+1,row=templateRow.cloneNode(true);
+    const id=offset+i+1+shift,row=templateRow.cloneNode(true);
     row.querySelectorAll('a[href]').forEach(a=>{const href=a.getAttribute('href');if(/(?:details|download|viewsnatches)\.php\?/.test(href))a.setAttribute('href',href.replace(/\bid=\d+/, 'id='+id));});
     row.querySelector('table.torrentname a[href*="details.php?"]').textContent='Native record '+id;
     row.querySelector('img.nexus-lazy-load').setAttribute('data-src','https://images.example.test/'+id+'.jpg');
     const bookmark=row.querySelector('a[id^=bookmark]');bookmark.id='bookmark'+i;bookmark.setAttribute('href','javascript: bookmark('+id+','+i+');');bookmark.removeAttribute('onclick');
-    if(brokenIds.has(id)){while(row.cells.length>2)row.cells[row.cells.length-1].remove();const nested=row.querySelector('table.torrentname');while(nested.rows[0].cells.length>2)nested.rows[0].cells[nested.rows[0].cells.length-1].remove();cut=true;}
+    if(cutIds.has(id)){while(row.cells.length>2)row.cells[row.cells.length-1].remove();const nested=row.querySelector('table.torrentname');while(nested.rows[0].cells.length>2)nested.rows[0].cells[nested.rows[0].cells.length-1].remove();cut=true;}
     rows.push(row.outerHTML);if(cut)break;
   }
   const base=normalizeTables(parseHTML(fixture(new URL('https://ptzone.xyz/torrents.php'))).document);
@@ -95,10 +95,12 @@ function serverPage(offset,size){
   return base.documentElement.outerHTML;
 }
 async function until(condition,message){for(let n=0;n<200;n++){if(condition())return;await delay(10);}throw new Error(message);}
+function visibleRows(doc){return Array.from(doc.querySelectorAll('tr.pzm-torrent:not([data-pzm-recovery-original])'));}
+function visibleIds(doc){return visibleRows(doc).map(row=>Number(new URL(row.querySelector('.pzm-name-title>a[href*="details.php?"]').getAttribute('href'),'https://ptzone.xyz').searchParams.get('id')));}
 for(let page=0;page<5;page++){
   const calls=[];
   const get=async(url,options)=>{
-    const u=new URL(url),size=Number(u.searchParams.get('pageSize')),offset=Number(u.searchParams.get('page'))*size;
+    const u=new URL(url),size=Number(u.searchParams.get('pageSize')||50),offset=Number(u.searchParams.get('page'))*size;
     calls.push({offset,size,notnewword:u.searchParams.get('notnewword')});equal(u.origin,'https://ptzone.xyz','Recovery uses only the original site');equal(u.searchParams.get('spstate'),'2','Promotion filter is retained');equal(u.searchParams.get('search'),'HDR','Search query is retained');equal(options.credentials,'same-origin','No manual cookie or credential extraction');
     return {ok:true,text:async()=>serverPage(offset,size)};
   };
@@ -106,16 +108,62 @@ for(let page=0;page<5;page++){
   const x=boot('torrents.php?incldead=1&spstate=2&search=HDR&page='+page,{html:serverPage(page*50,50),fetch:get,bookmark:page===2?()=>{bookmarkCalls++;}:undefined}),d=x.document;
   if(page>=2)await until(()=>d.querySelector('.pzm-partial-notice p')?.textContent.startsWith('已补齐'),'Recovery did not complete on page '+(page+1));
   else await delay(10);
-  const actual=Array.from(d.querySelectorAll('tr.pzm-torrent .pzm-name-title>a[href*="details.php?"]'),a=>Number(new URL(a.getAttribute('href'),'https://ptzone.xyz').searchParams.get('id')));
+  const actual=visibleIds(d);
   equal(actual,Array.from({length:50},(_,i)=>page*50+i+1),'Page '+(page+1)+' has exactly its original 50 records, in order');
   equal(new Set(actual).size,50,'Recovered page has no duplicated records');
   if(page>=2)equal(Array.from(d.querySelectorAll('.pzm-recovery-pagination a'),a=>a.getAttribute('href')),Array.from(d.querySelectorAll('nav.pzm-pagination:not(.pzm-recovery-pagination) a'),a=>a.getAttribute('href')),'Recovered pages mirror native navigation at the bottom');
-  if(page>=2){const imported=d.querySelector('tr.pzm-torrent:not([data-pzm-source-missing]) a[id^=bookmark]');ok(imported.getAttribute('href').startsWith(page===2?'javascript:':'details.php?'),'Available native bookmark helper is preserved; absent helper opens native details');equal(d.querySelector('tr.pzm-torrent img.nexus-lazy-load').getAttribute('loading'),'lazy','Recovered page initializes lazy native posters without missing footer scripts');equal(bookmarkCalls,0,'Recovery never automatically bookmarks a resource');}
-  const ids=Array.from(d.querySelectorAll('tr.pzm-torrent a[id^=bookmark]'),a=>a.id);equal(new Set(ids).size,ids.length,'Imported bookmark controls have unique IDs');
+  if(page>=2){const imported=d.querySelector('tr.pzm-torrent:not([data-pzm-source-missing]):not([data-pzm-recovery-original]) a[id^=bookmark]');ok(imported.getAttribute('href').startsWith(page===2?'javascript:':'details.php?'),'Available native bookmark helper is preserved; absent helper opens native details');equal(visibleRows(d)[0].querySelector('img.nexus-lazy-load').getAttribute('loading'),'lazy','Recovered page initializes lazy native posters without missing footer scripts');equal(bookmarkCalls,0,'Recovery never automatically bookmarks a resource');}
+  const ids=visibleRows(d).flatMap(row=>Array.from(row.querySelectorAll('a[id^=bookmark]'),a=>a.id));equal(new Set(ids).size,ids.length,'Imported bookmark controls have unique IDs');
   for(const row of d.querySelectorAll('tr[data-pzm-source-missing]')){equal(row.querySelector('[data-pzm-field=size]').textContent,'—','Missing source statistics are not replaced with invented zeroes');ok(row.querySelector('.pzm-source-missing-note'),'Unavailable source fields explicitly labelled');ok(row.querySelector('.pzm-actions a[href*="download.php"]'),'Incomplete records retain a native-format download destination');}
   ok(calls.length<=50,'Recovery has a bounded request budget');if(page<2)equal(calls.length,0,'Complete native pages do not send recovery requests');
   if(page>=2)ok(calls.every(call=>call.notnewword==='1'),'Fragment reads do not repeatedly submit the query as a new hot search');
   x.window.__ptzoneMobile.restore();equal(d.querySelector('table.mainouter').outerHTML,x.before,'Recovery removes all imported records when restoring the native page');
+}
+// The iPhone report: the initial document ends after four records, while a
+// fresh request to the same page works. No fragments should be requested.
+{
+  const calls=[];
+  const x=boot('torrents.php?page=2&incldead=1&sort=4&type=desc',{html:serverPage(100,50,{cutIds:new Set([105])}),fetch:async(url,options)=>{
+    calls.push({query:Object.fromEntries(new URL(url).searchParams),cache:options.cache});
+    return {ok:true,text:async()=>serverPage(100,50,{cutIds:new Set(),shift:-1})};
+  }});
+  await until(()=>visibleRows(x.document).length===50,'Fresh same-page request did not restore all 50 records');
+  equal(calls,[{query:{page:'2',incldead:'1',sort:'4',type:'desc',notnewword:'1'},cache:'no-store'}],'One fresh read of the current page preserves the query and skips fragments');
+  equal(visibleIds(x.document),Array.from({length:50},(_,i)=>100+i),'Full retry uses the new page as one snapshot');
+  ok(x.document.querySelector('.pzm-partial-notice').hidden,'A fully restored page clears the warning');
+  x.window.__ptzoneMobile.restore();equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Original document remains reversible after a fresh result');
+}
+for(const resolves of [true,false]){
+  const pageRequests=[];
+  const x=boot('torrents.php?page=2',{html:serverPage(100,50,{cutIds:new Set([105])}),fetch:async url=>{
+    const u=new URL(url),size=Number(u.searchParams.get('pageSize')||50),offset=Number(u.searchParams.get('page'))*size;
+    pageRequests.push([offset,size]);
+    if(size!==50)equal(visibleIds(x.document),[101,102,103,104],'Unverified fragments do not alter the visible list');
+    const html=size===50?serverPage(100,50,{cutIds:new Set(resolves&&pageRequests.length>1?[]:[105]),shift:resolves&&pageRequests.length>1?-1:0}):serverPage(offset,size,{shift:-1});
+    return {ok:true,text:async()=>html};
+  }});
+  if(resolves){
+    await until(()=>visibleRows(x.document).length===50,'Overlap did not recover with a fresh snapshot');
+    equal(pageRequests,[[100,50],[105,5],[100,50]],'An overlapping fragment triggers one full-page retry');
+    equal(visibleIds(x.document),Array.from({length:50},(_,i)=>100+i),'Only the renewed snapshot is committed');
+  }else{
+    await until(()=>x.document.querySelector('.pzm-partial-notice p')?.textContent.includes('仍在更新'),'Repeated overlap did not settle');
+    equal(pageRequests.length,4,'Persistent overlap has a bounded retry');
+    equal(visibleIds(x.document),[101,102,103,104],'Failed recovery leaves the original records in order');
+  }
+  x.window.__ptzoneMobile.restore();equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Recovery remains reversible after an overlap');
+}
+{
+  const calls=[];
+  const partial=serverPage(250,50,{cutIds:new Set([255])});
+  const x=boot('torrents.php?page=5',{html:partial,fetch:async url=>{
+    calls.push(new URL(url).searchParams.get('pageSize'));
+    return {ok:true,text:async()=>partial};
+  }});
+  await until(()=>x.document.querySelector('.pzm-partial-notice p')?.textContent.includes('仍不完整'),'Later page did not attempt a fresh read');
+  equal(calls,[null],'Later pages also retry the current page but leave further fragment requests to the user');
+  equal(visibleIds(x.document),[251,252,253,254],'A partial later page remains available');
+  x.window.__ptzoneMobile.restore();
 }
 {
   let calls=0;
