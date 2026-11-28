@@ -133,6 +133,31 @@ for(let page=0;page<5;page++){
   ok(x.document.querySelector('.pzm-partial-notice').hidden,'A fully restored page clears the warning');
   x.window.__ptzoneMobile.restore();equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Original document remains reversible after a fresh result');
 }
+for(const {cut,retry} of [{cut:46,retry:'complete'},{cut:20,retry:'complete'},{cut:46,retry:'partial'},{cut:46,retry:'error'}]){
+  const native=serverPage(0,46,{cutIds:new Set([cut])});
+  const calls=[];
+  let wholeReads=0;
+  const x=boot('torrents.php?search=HDR&incldead=1',{html:native,fetch:async url=>{
+    const query=new URL(url).searchParams;
+    const size=Number(query.get('pageSize')||46);
+    const offset=Number(query.get('page'))*size;
+    calls.push([offset,size,query.get('search'),query.get('incldead')]);
+    if(!query.has('pageSize')&&++wholeReads===2){
+      if(retry==='error')return {ok:false};
+      if(retry==='complete')return {ok:true,text:async()=>serverPage(0,46,{cutIds:new Set()})};
+    }
+    return {ok:true,text:async()=>serverPage(offset,size,{cutIds:new Set([cut])})};
+  }});
+  const notice=()=>x.document.querySelector('.pzm-partial-notice');
+  await until(()=>notice()?.textContent.includes('已补齐本页 46 条'),'Partial statistics did not settle');
+  equal(wholeReads,2,'Missing statistics get exactly one additional whole-page read');
+  ok(calls.every(([, ,search,dead])=>search==='HDR'&&dead==='1'),'Statistics retry preserves search and filters');
+  equal(visibleIds(x.document),Array.from({length:46},(_,i)=>i+1),'The original 46 results remain in order without duplicates');
+  equal(x.document.querySelectorAll('tr[data-pzm-source-missing]').length,retry==='complete'?0:1,'Temporary missing fields recover while unavailable fields retain their marker');
+  equal(notice().hidden,retry==='complete','A clean retry clears the warning; unavailable statistics remain visible');
+  x.window.__ptzoneMobile.restore();
+  equal(x.document.querySelector('table.mainouter').outerHTML,x.before,'Statistics recovery remains reversible');
+}
 for(const resolves of [true,false]){
   const pageRequests=[];
   const x=boot('torrents.php?page=2',{html:serverPage(100,50,{cutIds:new Set([105])}),fetch:async url=>{
